@@ -1,16 +1,27 @@
 # Programming the Arduino Uno in FlashForth
 
-## Boards and Microcontrollers
-This code has been tested extensively with the Arduino Uno and the [Microchip ATmega328PB Xplained Mini ](https://www.microchip.com/en-us/development-tool/ATMEGA328PB-XMINI). I prefer the latter board for development as it includes a hardware debugger on the same board, which works well with [Bloom](https://bloom.oscillate.io/) and it only costs $12! If looking to purchase a new board to work with this code, I recommend the Microchip board. 
+This is a [FlashForth]() framework similar to [AVR_C] and the [Arduino] frameworks. It allows someone to come up to speed quickly in using FlashForth on the Arduino Uno. It will follow the same terminology used in the Arduino/AVR_C frameworks, where the pins are referenced by Uno pin number and not by ATmega328P register designation.
 
-If you have an existing Uno, it will work very well. If you wish to add hardware debugging, you will want to purchase a debugWIRE compatible device such as the [Microchip MPLAB Snap](https://www.microchip.com/en-us/development-tool/PG164100) or the [Atmel ICE](https://www.microchip.com/en-us/development-tool/ATATMEL-ICE).
+The file *m328Pdef.inc* is included in this repository to document AATmega328P constants, the file *Library/328P_HAL.fs* will be the Forth version of this, except it will base many of the constants per the UNO as mentioned above.
+
+## Boards and Microcontrollers
+This code is being developed for the Arduino Uno. 
 
 ## Arduino Framework  and standard C Replacement Routines
 ### Arduino Framework Functions
 
 **Each function used requires an #include in order to be used (example):**
 
-### Arduino Framework Functions (TO BE WRITTEN)
+### Arduino Framework Functions (Complete)
+* **input ( pin -- )** (*pinMode(pin, INPUT)*): define INPUT for an UNO pin (pins D0-D13 only). 
+* **output ( pin -- )** (*pinMode(pin, OUTPUT)*): define OUTPUT for an UNO pin (pins D0-D13 only). 
+* **in_pullup ( pin -- )** (*pinMode(pin, INPUT_PULLUP)*): define INPUT_PULLUP for an UNO pin (pins D0-D13 only).
+* **high ( pin -- )** *digitalWrite(pin, level)* : set an UNO pin to HIGH (pins D0-D13 only). This version also adds TOG, which toggles the level. Much easier than checking the level and setting it to be the opposite level and requires less code. 
+* **low ( pin -- )** *digitalWrite(pin, level)* : set an UNO pin to LOW (pins D0-D13 only). 
+* **toggle ( pin -- )** *N/A* : toggle an UNO pin (pins D0-D13 only).
+* **read** *digitalRead(pin)*: returns value (1 or 0) of Uno pin (pins D0-D13 only). 
+
+### Arduino Framework Functions (In process)
 * **analogRead(pin)**: read one of the 6 Analog pins (A0-A5). Returns a 10-bit value in reference to AREF see [analogReference()](https://www.arduino.cc/reference/en/language/functions/analog-io/analogreference/). In this case, it only DEFAULT value of VCC or 5V. To convert reading to voltage, multiply by 0.0048 (for a reference voltage of 5V).
 * **analogWrite(pin, n)**: setup the Timer/Counters to provide a PWM signal. Keep in mind, PWM using the Timer/Counters, see this [AVR Datasheet Note: PWM](https://wellys.com/posts/avr_c_step2/) as to which pin, a Timer/Counters is assigned. The examples such as *button* (T/C 2) and *micros* (T/C 1) also use the same Timer/Counters, so the conflict might be an issue. 
 	* pin = Arduino UNO Pin Number, must have a "\~" in its name (3, 5, 6, 9, 10, 11)
@@ -22,9 +33,6 @@ If you have an existing Uno, it will work very well. If you wish to add hardware
 		* UNO pin 9/PB1, 976.6Hz
 		* UNO pin 10/PB2, 976.6Hz
 		* UNO pin 11/PB3, 488.3Hz
-* **digitalRead(pin)**: returns value (1 or 0) of Uno pin (pins 0-13 only). If using serial I/O (printf/puts/getchar) then Uno pins 0 and 1 are not usable. digitalRead() is not configured to use A0-A5.
-* **digitalWrite(pin, level)**: set an UNO pin to HIGH, LOW or TOG (pins 0-13 only).  If using serial I/O (printf/puts/getchar) then Uno pins 0 and 1 are not usable. This version also adds TOG, which toggles the level. Much easier than checking the level and setting it to be the opposite level and requires less code. digitalWrite() is not configured to use A0-A5.
-* **pinMode(pin, mode)**: define INPUT, OUTPUT, INPUT_PULLUP for an UNO pin (pins 0-13 only). Is not configured to use A0-A5.
 * **delay(ms)**: Blocking delay uses Standard C built-in \_delay_ms, however allows for a variable to be used as an argument. 
 * **millis()**: Returns a long int containing the current millisecond tick count. Review the millis example to understand how to use it. millis() uses *sys_clock_2*, which is a system clock configured using Timer/Counter 2.  
 ### Standard C I/O functions adapted for the ATmega328P
