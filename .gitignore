@@ -19,3 +19,5 @@ build
 *.eeprom
 *.bloom/
 *env*
+Pipfile
+Pipfile.lock

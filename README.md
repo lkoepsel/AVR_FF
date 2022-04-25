@@ -7,6 +7,39 @@ The file *m328Pdef.inc* is included in this repository to document AATmega328P c
 ## Boards and Microcontrollers
 This code is being developed for the Arduino Uno. 
 
+## Using upload_FF.py
+The upload_FF script will upload a forth file to the FlashForth Uno:
+```
+usage: upload_FF.py [-h] [--config] [--port PORT] [--xonxoff] [--baudrate BAUDRATE] [-n NEWLINEDELAY] [-e EMPTY] [-t] [-v] FILE
+
+Upload app for FlashForth
+
+positional arguments:
+  FILE                  file to send
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --config, -f          Print port configuration
+  --port PORT, -p PORT  Serial port name
+  --xonxoff             Serial port XON/XOFF enable, default is True
+  --baudrate BAUDRATE, -s BAUDRATE
+                        Serial port baudrate, default is 38400
+  -n NEWLINEDELAY, --newlinedelay NEWLINEDELAY
+                        Newline delay(milliseconds), default is 60
+  -e EMPTY, --empty EMPTY
+                        words empty delay, default is 100
+  -t, --print-statistics
+                        print transfer statistics
+  -v, --verbose         print all lines in input file, default is False
+
+Upload to board at higher speeds.
+```
+For smaller files, use:
+```
+upload_FF.py -v -n 20 -e 70 digitalread.fs
+```
+If a compilation is failing, set verbose mode with *-v* to see all lines passed.
+
 ## Arduino Framework  and standard C Replacement Routines
 ### Arduino Framework Functions
 
