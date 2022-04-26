@@ -52,3 +52,4 @@ PIN0 DDRD 2constant D0  \ Board Connector  0 PD0
 : input ( bit port -- ) mclr ;  \ set a pin as input
 : pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
+marker -end_HAL
