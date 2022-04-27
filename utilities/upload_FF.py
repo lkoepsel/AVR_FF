@@ -7,12 +7,11 @@ import re
 import datetime
 import traceback
 import time
-from operator import methodcaller
-
+from dotenv import dotenv_values
 
 class Config(object):
     def __init__(self):
-        self.port = '/dev/cu.usbmodem3101'
+        self.port = os.environ.get('port', '/dev/cu.usbmodem3199')
         self.baudrate = '38400'
         self.xonxoff = True
         self.newlinedelay = 50
@@ -60,13 +59,13 @@ def parse_arg(config):
         epilog="""Upload to board at higher speeds.""")
     parser.add_argument("file", metavar="FILE", help="file to send")
     parser.add_argument("--config", "-f", action="store_true",
-                        default=True,
-                        help="Print port configuration")
+                        default=False,
+                        help="Print port configuration, default is False")
     parser.add_argument("--port", "-p", action="store",
-                        type=str, default='/dev/cu.usbmodem3101',
+                        type=str, default='/dev/cu.usbmodem3188',
                         help="Serial port name")
     parser.add_argument("--xonxoff", action="store_true",
-                        default=True, 
+                        default=True,
                         help="Serial port XON/XOFF enable, default is True")
     parser.add_argument("--baudrate", "-s", action="store",
                         type=str, default=38400,
@@ -109,6 +108,9 @@ def main():
 
     config = Config()
     parse_arg(config)
+
+    values = dotenv_values('.env')
+    config.port = values['port']
     serial_open(config)
     t0 = datetime.datetime.now()
     n = xfr(None, 0, config)
@@ -128,19 +130,19 @@ def xfr(parent_fname, parent_lineno, config):
     marker_cmd = re.compile(r'^(marker.-)')
     del_cmd = re.compile(r'^(-)')
     empty_cmd = re.compile(r'empty\n')
-    lineno = 0
+    lineno = 1
     n_bytes_sent = 0
     response = []
     orig_file = ['Start']
     try:
         for line in open(config.file, "rt"):
-            lineno += 1
             orig_file.append(line)
             if config.verbose:
                 print(lineno, line, end='')
             if (empty_cmd.match(line) or marker_cmd.match(line) or
                     del_cmd.match(line)):
-                print(f"empty command or marker found")
+                if config.verbose:
+                    print(f"empty command or marker found")
                 time.sleep(config.empty * .001)
             if (not comment.match(line)) and (not blankline.match(line)):
                 config.ser.write(str.encode(line))
@@ -150,12 +152,20 @@ def xfr(parent_fname, parent_lineno, config):
                 response.append(response_line)
                 if (response_line.endswith(badline) or
                         response_line.endswith(defined)):
-                    print(f'*** Compilation error, line: {lineno}')
-                    rtoASCII(response_line)
-                    print(lineno - 2, orig_file[lineno - 2], end='')
-                    print(lineno - 1, orig_file[lineno - 1], end='')
-                    print(lineno, orig_file[lineno], end='')
-                    # sys.exit()
+                    m = (
+                        f"*** Compilation error, line:"
+                        f"{lineno - 1} {str(response_line)}"
+                    )
+                    print(m)
+
+            lineno += 1
+        if (not orig_file[lineno - 1].endswith('\n')):
+            lineno -= 1
+            m = (
+                f"Last line ({lineno}) must end w/ a new line:"
+                f" {orig_file[lineno]}"
+                )
+            print(m)
         return [n_bytes_sent, lineno]
     except (OSError) as e:
         if parent_fname is not None:

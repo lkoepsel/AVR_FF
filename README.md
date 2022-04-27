@@ -40,6 +40,15 @@ upload_FF.py -v -n 20 -e 70 digitalread.fs
 ```
 If a compilation is failing, set verbose mode with *-v* to see all lines passed.
 
+### .env file required
+A .env file is required at the parent level *./AVR_FF* for the port, as in:
+```
+port=/dev/cu.usbmodem1401
+```
+
+## forth folder
+The **forth** folder is a collection of forth files which are part of FlashFort demonstrations written by Mikael N. Please use them as examples as well.
+
 ## Arduino Framework  and standard C Replacement Routines
 ### Arduino Framework Functions
 

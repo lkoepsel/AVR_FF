@@ -1,5 +1,4 @@
 \ microseconds delay for Atmega
--us
 marker -us
 
 \ Opcode only to flash
@@ -9,9 +8,9 @@ marker -us
 $95a8 op: wdr,
 
 \ clear watchdog
-: cwd [ wdr, ] ; inlined 
+\ : cwd [ wdr, ] ; inlined 
  
-\ Clear watchdog (wdr instruction) takes one clock cycle
+\ Clear watchdog (wdr instruction) takes one clock cycle (62.5ns @ 16MHz)
 \ Adjust the number of CWD to achieve a one us delay
 \ 9 CWD is needed @ 16MHz for ATmega 328 and 2560.
 : us ( u -- ) \ busy wait for u microseconds
@@ -23,7 +22,6 @@ $95a8 op: wdr,
 ;
 
 \ Helper word for calibrating the us loop
--us-cal
 marker -us-cal
 : us-cal ( u -- ) \ give target delay in ms
   ticks >r

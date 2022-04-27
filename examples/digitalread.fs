@@ -1,4 +1,3 @@
--button
 marker -button
 : button ( pin -- )
 	read 
