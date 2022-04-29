@@ -37,12 +37,3 @@ marker -timing \ test fastest loop through code
 		dup us
 	again
 ;
-
-: time_ct ( -- ) \ very accurate timing, can range down to 1ms/loop
-	D3 output
-	begin
-		counter @
-		dup ms
-		counter @ - .u
-	again
-;
