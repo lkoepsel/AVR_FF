@@ -44,6 +44,33 @@ PIN2 DDRD 2constant D2  \ Board Connector  2 PD2
 PIN1 DDRD 2constant D1  \ Board Connector  1 PD1 
 PIN0 DDRD 2constant D0  \ Board Connector  0 PD0
 
+\ microseconds delay for Atmega
+marker -us
+
+\ Opcode only to flash
+: op: ( opcode -- ) flash create , ram does> @ i, ;
+
+\ Atmega wdr instruction
+$95a8 op: wdr,
+
+\ Clear watchdog (wdr instruction) takes one clock cycle (62.5ns @ 16MHz)
+\ Adjust the number of CWD to achieve a one us delay
+\ 9 CWD is needed @ 16MHz for ATmega 328 and 2560.
+: us ( u -- ) \ busy wait for u microseconds
+  begin
+    cwd cwd  cwd cwd cwd cwd cwd cwd cwd
+    1- dup 
+  0= until
+  drop 
+;
+
+: .memory ( ---)
+    cr ."  flash: "   flash  here u.
+    cr ." eeprom: "   eeprom here u.
+    cr ."    ram: "   ram    here u. 
+    cr ;
+
+
 \ PRIM: primitives for initializing port and set high or low output
 : high ( bit port -- ) 1 + mset ;  \ set a pin high
 : low ( bit port -- ) 1 + mclr ;  \ set a pin low
@@ -52,4 +79,5 @@ PIN0 DDRD 2constant D0  \ Board Connector  0 PD0
 : input ( bit port -- ) mclr ;  \ set a pin as input
 : pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
+
 marker -end_HAL

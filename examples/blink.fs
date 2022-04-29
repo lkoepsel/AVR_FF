@@ -1,8 +1,8 @@
 marker -blink
 : blink ( ms -- ) 
-	LED output
+	LED output 
 	begin 
 		LED toggle 
-		ms 
+		dup ms 
 	again
 ;
