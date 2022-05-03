@@ -9,8 +9,10 @@
 \ Test using check_ms (100 check_ms) = delta of 100)
 
 \ Disable interrupt before removing the interrupt code
-dis_T2_OVF
+-T2_int
 marker -T2_int
+dis_T2_OVF
+
 \ Timer 2 definitions from m328pdef.inc
 $b0 constant TCCR2A
 $b1 constant TCCR2B
@@ -24,10 +26,12 @@ variable ms_count      \ counter for milliseconds
 variable B_count       \ counter for scaled ticks
 variable B_scalar      \ scalar for bounce divider
 
+: init_B_scalar B_DIVIDER B_scalar ! ;
+
 \ bounce scalar counter - divides T/C 2 clock by B_DIVIDER
 : bounce 
     B_scalar @ 1 - dup 0=
-    if drop 1 B_count +! B_DIVIDER B_scalar !
+    if drop 1 B_count +! D3 toggle init_B_scalar
     else B_scalar !
     then
 ;
@@ -35,6 +39,7 @@ variable B_scalar      \ scalar for bounce divider
 \ The interrupt routine
 : T2_OVF_ISR
   1 ms_count +!
+  D5 toggle
   bounce
 ;i
 
@@ -46,11 +51,13 @@ variable B_scalar      \ scalar for bounce divider
 
   \ Activate T/C 2 for a 1ms interrupt
   1 TCCR2A c!
-  $b TCCR2B c!
-  $ff OCR2A c!
+  $0b TCCR2B c!
+  $fe OCR2A c!
 
   \ initialize bounce clock scalar
-  B_DIVIDER B_scalar !
+  init_B_scalar
+  D3 output
+  D5 output
   \ Activate timer2 overflow interrupt
   1 TIMSK2 mset
 ;
@@ -75,6 +82,8 @@ variable B_scalar      \ scalar for bounce divider
     dup ms
   again
 ;
+
+init_T2_OV
 
 \ to initialize T/C 2 for ms interrupt use: init_T2_OV
 \ to test for milliseconds, 100 check_ms, delta is 100

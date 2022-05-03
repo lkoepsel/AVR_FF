@@ -9,6 +9,7 @@
 \
 
 \ Disable interrupt before removing the interrupt code
+-T1_ctc
 marker -T1_ctc
 \ Timer 2 definitions from m328pdef.inc
 $80 constant TCCR1A
@@ -22,6 +23,7 @@ $85 constant TCNT1H
   1 TCCR1B c!
 ;
 
+-check
 marker -check
 
 \ ms counter used to check accuracy, 100 check_ms will display a delta of 100
