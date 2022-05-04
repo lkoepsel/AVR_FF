@@ -11,7 +11,6 @@
 \ Disable interrupt before removing the interrupt code
 -T2_int
 marker -T2_int
-dis_T2_OVF
 
 \ Timer 2 definitions from m328pdef.inc
 $b0 constant TCCR2A
@@ -20,6 +19,13 @@ $b3 constant OCR2A
 $70 constant TIMSK2
 #10 constant T2_OVF_VEC
 #08 constant B_DIVIDER
+
+\ disable T/C 2 Overflow interrupt
+: dis_T2_OVF
+  1 TIMSK2 mclr
+;
+
+dis_T2_OVF
 
 \ Counters for timer overflows
 variable ms_count      \ counter for milliseconds
@@ -60,11 +66,6 @@ variable B_scalar      \ scalar for bounce divider
   D5 output
   \ Activate timer2 overflow interrupt
   1 TIMSK2 mset
-;
-
-\ disable T/C 2 Overflow interrupt
-: dis_T2_OVF
-  1 TIMSK2 mclr
 ;
 
 \ ms counter used to check accuracy, 100 check_ms will display a delta of 100
