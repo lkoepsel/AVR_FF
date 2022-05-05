@@ -9,6 +9,7 @@ import traceback
 import time
 from dotenv import dotenv_values
 
+
 class Config(object):
     def __init__(self):
         self.port = os.environ.get('port', '/dev/cu.usbmodem3199')
@@ -56,7 +57,10 @@ def serial_open(config):
 def parse_arg(config):
     parser = argparse.ArgumentParser(
         description="Upload app for FlashForth",
-        epilog="""Upload to board at higher speeds.""")
+        epilog="""
+        Upload to board at higher speeds. To list serial ports:
+        python3 -m serial.tools.list_ports
+        """)
     parser.add_argument("file", metavar="FILE", help="file to send")
     parser.add_argument("--config", "-f", action="store_true",
                         default=False,
@@ -123,48 +127,69 @@ def main():
 
 def xfr(parent_fname, parent_lineno, config):
 
-    comment = re.compile(r'^\s*\\ .*')
-    blankline = re.compile(r'^\s*$')
-    badline = b'?\r\n'
-    defined = b'DEFINED\r\n'
-    marker_cmd = re.compile(r'^(marker.-)')
-    del_cmd = re.compile(r'^(-)')
-    empty_cmd = re.compile(r'empty\n')
-    lineno = 1
+    # check input line regex
+    comment = re.compile(r'^\s*\\ .*')      # comment line
+    blankline = re.compile(r'^\s*$')        # blank line
+    marker_cmd = re.compile(r'^(marker.-)')  # marker command
+    del_cmd = re.compile(r'^(-)')           # delete marker command
+    empty_cmd = re.compile(r'empty\n')      # empty line
+
+    # check response line regex
+    boot = b'ATmega328 14.04.2022\r\n'      # boot response
+    null_response = b'\r\n'                 # null response following boot
+    badline = b'?\r\n'                      # bad line (compilation error)
+    defined = b'DEFINED\r\n'                # word already defined
+    compile = b'COMPILE ONLY\r\n'           # compile only error
+    del_marker = b'-'                       # starts with -, delete marker
+
+    lineno = 0
     n_bytes_sent = 0
-    response = []
-    orig_file = ['Start']
+    responses = []
+    original = []
     try:
+        # FF responds with a reset message and line feed upon connection
+        responses.append(config.ser.readline())
+        responses.append(config.ser.readline())
+
         for line in open(config.file, "rt"):
-            orig_file.append(line)
-            if config.verbose:
-                print(lineno, line, end='')
-            if (empty_cmd.match(line) or marker_cmd.match(line) or
-                    del_cmd.match(line)):
-                if config.verbose:
-                    print(f"empty command or marker found")
-                time.sleep(config.empty * .001)
-            if (not comment.match(line)) and (not blankline.match(line)):
+            original.append(line)
+            lineno += 1
+            if not (comment.match(line) or blankline.match(line)):
                 config.ser.write(str.encode(line))
                 n_bytes_sent += len(line)
-                response_line = config.ser.readline()
-                time.sleep(config.newlinedelay * .001)
-                response.append(response_line)
-                if (response_line.endswith(badline) or
-                        response_line.endswith(defined)):
+                response = config.ser.readline()
+
+                if config.verbose:
                     m = (
-                        f"*** Compilation error, line:"
-                        f"{lineno - 1} {str(response_line)}"
+                        f"{lineno : <4} {line[:-1] : <40}"
+                        f"{str(response) : <40}"
                     )
                     print(m)
 
-            lineno += 1
-        if (not orig_file[lineno - 1].endswith('\n')):
-            lineno -= 1
+                if ((response.endswith(badline) or
+                     response.endswith(defined) or
+                     response.endswith(compile)) and
+                        not response.startswith(del_marker)):
+                    m = (
+                        f"*** Compilation error, line:"
+                        f"{lineno} {str(response)} "
+                    )
+                    print(m)
+                    responses.append(response)
+
+            # time.sleep(int(config.newlinedelay) * .001)
+
+        # if last line isn't a line feed, fix and advise of error
+        # subtract 1, as index goes from 0 and file counts from 1
+        orig_index = lineno - 1
+        if (not original[orig_index].endswith('\n')):
+            config.ser.write(str.encode('\n'))
             m = (
-                f"Last line ({lineno}) must end w/ a new line:"
-                f" {orig_file[lineno]}"
-                )
+                f"Last line ({lineno}) must be only a new line,"
+                f" it contains: "
+                f" {original[orig_index]}"
+                f"\nA new line was sent to ensure closing the last word in the file."
+            )
             print(m)
         return [n_bytes_sent, lineno]
     except (OSError) as e:

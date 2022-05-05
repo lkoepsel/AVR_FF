@@ -1,4 +1,5 @@
-\ Initialize Timer/Counter 2 to a 1ms timer
+\ Initialize Timer/Counter 2 to a 1ms interrupt timer
+\ Add a debounce counter which divides by B_DIVIDER
 \ TCCR2A [ COM2A1 COM2A0 COM2B1 COM2B0 0 0 WGM21 WGM20 ] = 00000001
 \ WGM22 WGM20 => PWM, Phase Correct, TOP = OCRA
 \ TCCR2B [ FOC2A FOC2B 0 0 WGM22 CS22 CS21 CS20 ] = 00001011
@@ -7,8 +8,8 @@
 \ Frequency = 16 x 10^6 / 32 / 255 = 2000Hz
 \ Counter performs another divide by 2 => 1000hz
 \ Test using check_ms (100 check_ms) = delta of 100)
+\ Test debounce using check_b (80 check_b = delta of 10)
 
-\ Disable interrupt before removing the interrupt code
 -T2_int
 marker -T2_int
 
@@ -18,6 +19,7 @@ $b1 constant TCCR2B
 $b3 constant OCR2A
 $70 constant TIMSK2
 #10 constant T2_OVF_VEC
+
 #08 constant B_DIVIDER
 
 \ disable T/C 2 Overflow interrupt
@@ -25,6 +27,7 @@ $70 constant TIMSK2
   1 TIMSK2 mclr
 ;
 
+\ Disable interrupt before removing the interrupt code
 dis_T2_OVF
 
 \ Counters for timer overflows

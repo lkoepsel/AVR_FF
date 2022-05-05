@@ -1,4 +1,3 @@
-empty
 \ HAL: provides constants for LEDs and Buttons
 \ Ports, DDRx, PORTx and PINx, page 624 datasheet
 $23 constant PINB  \ Port B input register (-1 for input port)
@@ -56,7 +55,7 @@ $95a8 op: wdr,
 \ Clear watchdog (wdr instruction) takes one clock cycle (62.5ns @ 16MHz)
 \ Adjust the number of CWD to achieve a one us delay
 \ 9 CWD is needed @ 16MHz for ATmega 328 and 2560.
-: us ( u -- ) \ busy wait for u microseconds
+: us ( u -- ) \ blocking wait for u microseconds
   begin
     cwd cwd  cwd cwd cwd cwd cwd cwd cwd
     1- dup 
