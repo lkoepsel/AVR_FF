@@ -16,7 +16,7 @@ marker -timing \ test fastest loop through code
 \ 3 ms: 4.00ms/high, 8.00ms/period
 \ 5 ms: 6.01ms/high, 12.01ms/period
 
-: time_ms ( -- ) \ very accurate timing, can range down to 1ms/loop
+: time_ms ( n -- ) \ delay for n ms
 	D3 output
 	begin
 		D3 toggle

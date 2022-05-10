@@ -1,5 +1,8 @@
 \ Testing execution speed with round-robin tasking
 \ See https://wellys.com/posts/board-language_speed/
+\ tasks execute @ 26.512kHz, every 37.72us
+-tasks
+marker -tasks
 
 \ 1. Setup pins as output
 : setup

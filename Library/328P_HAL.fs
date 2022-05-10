@@ -63,10 +63,10 @@ $95a8 op: wdr,
   drop 
 ;
 
-: .memory ( ---)
-    cr ."  flash: "   flash  here u.
-    cr ." eeprom: "   eeprom here u.
-    cr ."    ram: "   ram    here u. 
+: .mem_left ( ---)
+    cr ."  flash: "   flash  unused u.
+    cr ." eeprom: "   eeprom unused u.
+    cr ."    ram: "   ram    unused u. 
     cr ;
 
 
@@ -79,4 +79,5 @@ $95a8 op: wdr,
 : pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
 
+-end_HAL
 marker -end_HAL
