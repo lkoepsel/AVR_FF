@@ -82,8 +82,9 @@ $95a8 op: wdr,
 -end_HAL
 marker -end_HAL
 
+\ Button debounce code based on Elliot Williams article
+\ https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii
 \ Initialize Timer/Counter 0 to be a 2 button debouncer @125Hz
-\ Don't use T0 and T2 simultaneously, due to conflicting interrupts
 \ Counter increments every 8ms
 \ TCCR0A [ COM0A1 COM0A0 COM0B1 COM0B0 0 0 WGM01 WGM00 ] = 00000001
 \ TCCR0B [ FOC0A FOC0B 0 0 WGM02 CS02 CS01 CS00 ] = 00001100
@@ -94,6 +95,7 @@ marker -end_HAL
 \ Counter performs another divide by 2 => 125 count/sec
 \ Every interrupt incr by 1 and toggles D5, 2 toggles = 1 period
 \ Oscilloscope shows D5 toggles every 8.01ms
+\ See examples/button.fs for how to use
 
 \ Requires 328P_HAL
 
