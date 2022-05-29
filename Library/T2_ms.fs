@@ -1,5 +1,5 @@
-\ Initialize Timer/Counter 2 to a multi-tasking timer 1000Hz
-\ Don't use T and T0 simultaneously, they conflict interrupts
+\ Initialize Timer/Counter 2 to a 1000Hz interrupt (1ms)
+\ Use interrupt to drive multi-tasking code
 \ Counter increments every 1.0012ms
 \ Mode 5, PWM, Phase Correct, Top=OCRA
 \ TCCR2A [ COM2A1 COM2A0 COM2B1 COM2B0 0 0 WGM21 WGM20 ] = 00000001
@@ -9,9 +9,8 @@
 \ CS22 CS20 => scalar of 32
 \ Frequency = 16 x 10^6 / 32 / 250 = 2000Hz
 \ Counter performs another divide by 2 => 998.8Hz count freq
-\ Every interrupt incr by 1 and toggles D5, 2 toggles = 1 period
-\ Oscilloscope shows D5 toggles every 1.0012ms
-\ Oscilloscope shows D3 toggles every  8.0096ms 
+\ Every interrupt incr by 1 and toggles D3, 2 toggles = 1 period
+\ Oscilloscope shows D3 toggles every 1.0012ms
 
 -T2_int
 marker -T2_int

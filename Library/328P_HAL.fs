@@ -79,9 +79,12 @@ $95a8 op: wdr,
 : pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
 
+: falkey false is turnkey ; \ use to reset turnkey vector
+
 -end_HAL
 marker -end_HAL
 
+\ Timer 0 - Used for debouncing buttons
 \ Button debounce code based on Elliot Williams article
 \ https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii
 \ Initialize Timer/Counter 0 to be a 2 button debouncer @125Hz
@@ -96,8 +99,6 @@ marker -end_HAL
 \ Every interrupt incr by 1 and toggles D5, 2 toggles = 1 period
 \ Oscilloscope shows D5 toggles every 8.01ms
 \ See examples/button.fs for how to use
-
-\ Requires 328P_HAL
 
 -T0_int
 marker -T0_int
@@ -143,17 +144,11 @@ variable count_1
     then
 ;
 
-: init_pressed_1 0 pressed_1 ! ; \ initialize pressed to False
-
-: incr_count_1 1 count_1 +! ; \ increment button counter
-
-: .count_1 cr ." button 1 pressed " count_1 @ . ." times" ;
-
 : check_btn_1 ( pin -- )
     down_1? str_history_1 pressed_1?
 ;
 
-: button_1 init_pressed_1 incr_count_1 .count_1 ;
+: clr_pressed_1 0 pressed_1 ! ; \ initialize pressed to False
 \ end button 1 definitions
 
 \ button 2 definitions
@@ -188,17 +183,11 @@ variable count_2
     then
 ;
 
-: init_pressed_2 0 pressed_2 ! ; \ initialize pressed to False
-
-: incr_count_2 1 count_2 +! ; \ increment button counter
-
-: .count_2 cr ." button 2 pressed " count_2 @ . ." times" ;
-
 : check_btn_2 ( pin -- )
     down_2? str_history_2 pressed_2?
 ;
 
-: button_2 init_pressed_2 incr_count_2 .count_2 ;
+: clr_pressed_2 0 pressed_2 ! ; \ initialize pressed to False
 \ end button 2 definitions
 
 \ T0 definitions
@@ -236,5 +225,57 @@ dis_T0_OVF
   \ Activate timer0 overflow interrupt
   1 TIMSK0 mset
 ;
+\ Initialize timer 1 to a Clear Timer on Compare Match (CTC) pin 10
+\ Timer 1 definitions pgs 140-166 DS40002061B
+\ TCCR1A [ COM1A1 COM1A0 COM1B1 COM1B0 0 0 WGM11 WGM10 ]
+\ TCCR1B [ ICNC1 ICES1 0 WGM13 WGM12 CS12 CS11 CS10 ]
+\ CTC Mode 4: WGM3:0 = 0100 N=8 (scalar)
+\ OC1A/B: COM1B1:0 = 0001 Toggle on Compare Match, Top = OCR1A
 
-: falkey false is turnkey ;
+-T1_ctc
+marker -T1_ctc
+\ Timer 1 definitions pgs 140-166 DS40002061B
+$80 constant TCCR1A \ T/C 1 Control Register A
+$81 constant TCCR1B \ T/C 1 Control Register B
+$88 constant OCR1AL \ Output Compare Register Low byte
+$89 constant OCR1AH \ Output Compare Register High byte
+
+\ initialize T/C 1 B ONLY as CTC, Top = OCR1A
+\ top determines the freq as in freq = 16MHz/(2*N*(1+top))
+\ 31 => 16MHz/(2*8*32) = 31.25kHz, 1023 => 976Hz
+: CTC ( top -- )
+  OCR1AL ! \ freq based on OCR1A
+  %00010000 TCCR1A c! \ COM1B1
+  %00001010 TCCR1B c! \ WGM12 scalar
+  D10 output
+;
+
+\ Initialize Timer/Counter 2 to Fast PWM 
+\ Use to vary intensity of an LED
+\ Mode 3, Fast PWM, Top=OCRA, Clear OC2A on Compare Match
+\ TCCR2A [ COM2A1 COM2A0 COM2B1 COM2B0 0 0 WGM21 WGM20 ] = 10000011
+\ WGM22 WGM21 WGM20 => Fast PWM, TOP = OCRA
+\ TCCR2B [ FOC2A FOC2B 0 0 WGM22 CS22 CS21 CS20 ] = 00000010
+\ OCR2A = 127
+\ CS21 => scalar of 8
+\ Frequency = 7.8kHz, duty cycle/255 on stack
+\ 
+
+-T2
+marker -T2
+
+\ Timer 2 definitions from m328pdef.inc
+$b0 constant TCCR2A
+$b1 constant TCCR2B
+$b3 constant OCR2A
+#127 constant clock2_per \ clock period for 50% duty
+
+\ initialize Timer/Counter 2 to Fast PWM, top = OCRA
+: init_T2  ( dc/255 -- )
+
+  \ Activate T/C 2 for Fast PWM
+  OCR2A c!
+  %10000011 TCCR2A c!
+  %00000010 TCCR2B c!
+  D11 output
+;
