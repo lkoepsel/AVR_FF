@@ -38,7 +38,7 @@ Upload to board at higher speeds.
 ```
 The best way to use it is:
 ```
-(AVR_FF) lkoepsel@M1Mini Documents/AVR_FF (main *) » up.py Library/328P_HAL.fs
+$ up.py Library/328P_HAL.fs
 
 *** lines read: 227
 *** elapsed time: 0:00:03.876169 (1189 bytes/s) ***
@@ -46,7 +46,7 @@ The best way to use it is:
 If a compilation is failing, the program will automatically print all lines with the errors in red. My recommendation is to fix the first error found, as Forth compilation will fail many times, once an error has occurred.
 
 ### .env file required
-A .env file is required at the parent level *./AVR_FF* for the port, as in:
+A .env file is required at the parent level *./AVR_FF* for the port, with *port* defined. An example is:
 ```
 port=/dev/cu.usbmodem1401
 ```
@@ -73,4 +73,5 @@ I also write about C, MicroPython and Forth programming on microcontrollers at [
 
 Other sources of information which were helpful:
 * [FlashForth Atmega](https://flashforth.com/atmega.html)
+* [Forth & Arduino](https://arduino-forth.com) Outstanding site with tutorials on Flashforth and the AVR microcontrollers
 * [FlashForth Intro on Wellys](https://wellys.com/posts/flashforth/)
