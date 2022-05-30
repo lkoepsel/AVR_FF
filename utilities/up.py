@@ -8,7 +8,22 @@ import datetime
 import traceback
 import time
 from dotenv import dotenv_values
+from rich.console import Console
+from rich.traceback import install
+from rich.theme import Theme
+from rich.text import Text
+from rich.table import Table
 
+
+# sys.tracebacklimit = 0
+
+custom_theme = Theme({
+    "empty": "bold green4",
+    "EOF": "bold blue3",
+    "error": "bold red1",
+    "standard": "dim black"
+})
+con = Console(theme=custom_theme)
 
 class Config(object):
     def __init__(self):
@@ -45,13 +60,19 @@ def serial_open(config):
                                    xonxoff=config.xonxoff)
     except serial.SerialException as e:
         if e.errno == 16:
-            print(f"Serial port is busy, probably due to another connection.")
-            print(f"Disconnect other serial program and re-run.")
+            text = Text(style="error")
+            text.append("Serial port is busy, probably due to another connection.")
+            text.append("\nDisconnect other serial program and re-run.")
+            con.print(text, width=120)
             sys.exit()
         else:
-            print('Could not open serial port', config.port, 'due to:',
-                  os.strerror(e.errno))
-       # raise e
+            text = Text(style="error")
+            text.append("Could not open serial port, ")
+            text.append(config.port, style="black")
+            text.append(", due to: ")
+            text.append(os.strerror(e.errno), style="black")
+            con.print(text, width=120)
+            sys.exit()
 
 
 def parse_arg(config):
@@ -148,35 +169,39 @@ def xfr(parent_fname, parent_lineno, config):
     original = []
     try:
         # FF responds with a reset message and line feed upon connection
+        table = Table(width=170)
+        table.add_column("Line", width=6, justify="right")
+        table.add_column("Original", width=70, justify="left")
+        table.add_column("Response", width=90, justify="left")
+        compile_error = False
+
         responses.append(config.ser.readline())
         responses.append(config.ser.readline())
 
         for line in open(config.file, "rt"):
             original.append(line)
             lineno += 1
+
             if not (comment.match(line) or blankline.match(line)):
                 config.ser.write(str.encode(line))
                 n_bytes_sent += len(line)
                 response = config.ser.readline()
 
-                if config.verbose:
-                    m = (
-                        f"{lineno : <4} {line[:-1] : <40}"
-                        f"{str(response) : <40}"
-                    )
-                    print(m)
-
                 if ((response.endswith(badline) or
                      response.endswith(defined) or
                      response.endswith(compile)) and
                         not response.startswith(del_marker)):
-                    m = (
-                        f"*** Compilation error, line:"
-                        f"{lineno} {str(response)} "
-                    )
-                    print(m)
+                    compile_error = True
+                    # text = Text(style="error")
+                    # text.append("Compilation error, line: ")
+                    # text.append(str(lineno), style="black")
+                    # text.append(" ")
+                    # text.append(str(response.rstrip(b'\r\n'),'utf-8'), style="standard")
+                    # con.print(text, width=120)
                     responses.append(response)
-
+                    table.add_row(str(lineno), line[:-1], str(response), style="error")
+                else:
+                    table.add_row(str(lineno), line[:-1], str(response))
             # time.sleep(int(config.newlinedelay) * .001)
 
         # if last line isn't a line feed, fix and advise of error
@@ -184,13 +209,15 @@ def xfr(parent_fname, parent_lineno, config):
         orig_index = lineno - 1
         if (not original[orig_index].endswith('\n')):
             config.ser.write(str.encode('\n'))
-            m = (
-                f"Last line ({lineno}) must be only a new line,"
-                f" it contains: "
-                f" {original[orig_index]}"
-                f"\nA new line was sent to ensure closing the last word in the file."
-            )
-            print(m)
+            text = Text(style="EOF")
+            text.append("Last line, ")
+            text.append(str(lineno), style="black")
+            text.append(", must be only a new line, however, it contains: ")
+            text.append(original[orig_index], style="black")
+            text.append("\nA new line was sent to ensure closing the last word in the file.")
+            con.print(text, width=120)
+        if compile_error:
+            con.print(table)
         return [n_bytes_sent, lineno]
     except (OSError) as e:
         if parent_fname is not None:
