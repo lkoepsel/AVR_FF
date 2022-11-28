@@ -10,9 +10,9 @@ The ATmega328P datasheet is the ultimate arbiter of register names and usage.
 This code is being developed for the Arduino Uno. If tested on other boards, I will note that.
 
 ## Using up.py to transfer files
-The utilities/up.py script will upload a forth file to the FlashForth Uno:
+The utilities/up.py script will upload a forth file to the FlashForth Uno. It will strip all comments from file prior to sending. I've found this reduces possible errors and accelerates the speed of transmission.:
 ```
-usage: upload_FF.py [-h] [--config] [--port PORT] [--xonxoff] [--baudrate BAUDRATE] [-n NEWLINEDELAY] [-e EMPTY] [-t] [-v] FILE
+usage: upload_FF.py [-h] [--config] [--port PORT] [--xonxoff] [--baudrate BAUDRATE] [-n NEWLINEDELAY] [-e] [-t] [-v] FILE
 
 Upload app for FlashForth
 
@@ -27,11 +27,11 @@ optional arguments:
   --baudrate BAUDRATE, -s BAUDRATE
                         Serial port baudrate, default is 38400
   -n NEWLINEDELAY, --newlinedelay NEWLINEDELAY
-                        Newline delay(milliseconds), default is 60
-  -e EMPTY, --empty EMPTY
-                        words empty delay, default is 100
+                        Newline delay(milliseconds), default is 0
+  -e , --empty 
+                        issue empty command prior to sending, will remove all user words! Default is false
   -t, --print-statistics
-                        print transfer statistics
+                        print transfer statistics, default is true
   -v, --verbose         print all lines in input file, default is False
 
 Upload to board at higher speeds.

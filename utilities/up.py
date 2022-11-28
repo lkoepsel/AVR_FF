@@ -1,21 +1,26 @@
 #! python3
+# Possible commands and responses, not used. Retained for consideration.
+# marker_cmd = re.compile(r'^(marker.-)')  # marker command
+# del_cmd = re.compile(r'^(-)')           # delete marker command
+# empty_cmd = re.compile(r'empty\n')      # empty line
+
+# check response line regex
+# boot = b'ATmega328 14.04.2022\r\n'      # boot response
+# null_response = b'\r\n'                 # null response following boot
+
 import argparse
 import serial
 import sys
 import os
 import re
 import datetime
-import traceback
 import time
 from dotenv import dotenv_values
 from rich.console import Console
-from rich.traceback import install
 from rich.theme import Theme
 from rich.text import Text
 from rich.table import Table
 
-
-# sys.tracebacklimit = 0
 
 custom_theme = Theme({
     "empty": "bold green4",
@@ -25,12 +30,13 @@ custom_theme = Theme({
 })
 con = Console(theme=custom_theme)
 
+
 class Config(object):
     def __init__(self):
         self.port = os.environ.get('port', '/dev/cu.usbmodem3199')
         self.baudrate = '38400'
         self.xonxoff = True
-        self.newlinedelay = 50
+        self.newlinedelay = 5
         self.empty = .25
         self.bytesize = 8
         self.parity = 'N'
@@ -61,8 +67,8 @@ def serial_open(config):
     except serial.SerialException as e:
         if e.errno == 16:
             text = Text(style="error")
-            text.append("Serial port is busy, probably due to another connection.")
-            text.append("\nDisconnect other serial program and re-run.")
+            text.append("Serial port is busy, due to another connection.")
+            text.append("\nDisconnect other serial programs and re-run.")
             con.print(text, width=120)
             sys.exit()
         else:
@@ -96,11 +102,10 @@ def parse_arg(config):
                         type=str, default=38400,
                         help="Serial port baudrate, default is 38400")
     parser.add_argument("-n", "--newlinedelay", action="store",
-                        type=int, default=60,
-                        help="Newline delay(milliseconds), default is 60")
-    parser.add_argument("-e", "--empty", action="store",
-                        type=int, default=100,
-                        help="words empty delay, default is 100")
+                        type=int, default=0,
+                        help="Newline delay(milliseconds), default is 0")
+    parser.add_argument("-e", "--empty", action="store_true", default=False,
+                        help="empty command prior to upload")
     parser.add_argument("-t", "--print-statistics", action="store_true",
                         default=True, help="print transfer statistics")
     parser.add_argument("-v", "--verbose", action="store_true", default=False,
@@ -123,10 +128,50 @@ def parse_arg(config):
 # specific function to show hex ASCII values for hidden characters on error
 
 
+def clean_file(c):
+    f = []
+    comment = re.compile(r'^\s*\\ .*')      # comment line
+    blankline = re.compile(r'^\s*$')        # blank line
+
+    for line in open(c.file, "rt"):
+        if not (comment.match(line) or blankline.match(line)):
+            re.sub(
+                pattern=r'^\s(.*)(\\ .*)',
+                repl='\\1',
+                string=line
+            )
+            f.append(line)
+    return(f)
+
+
 def rtoASCII(r):
     print(str(bytearray(r)))
     # return " ".join(str(hex(char)) for char in r)
     return
+
+
+def warm_ready(c):
+    ready = b'  ok<#,ram> \r\n'             # ready response, ready for input
+    warm = '\x0D'                           # hex code for a warm boot
+    init_response = ""
+    while (init_response != ready):
+        c.ser.write(str.encode(warm))
+        time.sleep(int(c.newlinedelay) * .001)
+        init_response = c.ser.readline()
+
+
+def empty_ready(c):
+    ready = b'  ok<#,ram> \r\n'              # ready response, ready for input
+    empty_cmd = 'empty\n'                    # empty line
+    new_line = '\n'                          # hex code for a warm boot
+    init_response = ""
+    c.ser.write(str.encode(empty_cmd))
+    print("empty command sent")
+
+    while (init_response != ready):
+        c.ser.write(str.encode(new_line))
+        time.sleep(int(c.newlinedelay) * .001)
+        init_response = c.ser.readline()
 
 
 def main():
@@ -149,15 +194,6 @@ def main():
 def xfr(parent_fname, parent_lineno, config):
 
     # check input line regex
-    comment = re.compile(r'^\s*\\ .*')      # comment line
-    blankline = re.compile(r'^\s*$')        # blank line
-    marker_cmd = re.compile(r'^(marker.-)')  # marker command
-    del_cmd = re.compile(r'^(-)')           # delete marker command
-    empty_cmd = re.compile(r'empty\n')      # empty line
-
-    # check response line regex
-    boot = b'ATmega328 14.04.2022\r\n'      # boot response
-    null_response = b'\r\n'                 # null response following boot
     badline = b'?\r\n'                      # bad line (compilation error)
     defined = b'DEFINED\r\n'                # word already defined
     compile = b'COMPILE ONLY\r\n'           # compile only error
@@ -167,44 +203,45 @@ def xfr(parent_fname, parent_lineno, config):
     n_bytes_sent = 0
     responses = []
     original = []
+
     try:
         # FF responds with a reset message and line feed upon connection
-        table = Table(width=170)
+        table = Table(width=120)
         table.add_column("Line", width=6, justify="right")
-        table.add_column("Original", width=70, justify="left")
-        table.add_column("Response", width=90, justify="left")
+        table.add_column("Original", width=50, justify="left")
+        table.add_column("Response", width=50, justify="left")
         compile_error = False
 
-        responses.append(config.ser.readline())
-        responses.append(config.ser.readline())
+        # Wait for a ready response from a warm boot, prior to uploading file
+        warm_ready(config)
+        if config.empty:
+            empty_ready(config)
+        print(f"Ready response received, uploading", config.file)
 
-        for line in open(config.file, "rt"):
+        clean_orig = clean_file(config)
+
+        for line in clean_orig:
             original.append(line)
             lineno += 1
 
-            if not (comment.match(line) or blankline.match(line)):
-                config.ser.write(str.encode(line))
-                n_bytes_sent += len(line)
-                response = config.ser.readline()
+            config.ser.write(str.encode(line))
+            n_bytes_sent += len(line)
+            response = config.ser.readline()
 
-                if ((response.endswith(badline) or
-                     response.endswith(defined) or
-                     response.endswith(compile)) and
-                        not response.startswith(del_marker)):
-                    compile_error = True
-                    # text = Text(style="error")
-                    # text.append("Compilation error, line: ")
-                    # text.append(str(lineno), style="black")
-                    # text.append(" ")
-                    # text.append(str(response.rstrip(b'\r\n'),'utf-8'), style="standard")
-                    # con.print(text, width=120)
-                    responses.append(response)
-                    table.add_row(str(lineno), line[:-1], str(response), style="error")
-                else:
-                    table.add_row(str(lineno), line[:-1], str(response))
-            # time.sleep(int(config.newlinedelay) * .001)
+            if ((response.endswith(badline) or
+                 response.endswith(defined) or
+                 response.endswith(compile)) and
+                    not response.startswith(del_marker)):
+                compile_error = True
+                responses.append(response)
+                table.add_row(
+                    str(lineno), line[:-1], str(response), style="error")
+            else:
+                table.add_row(str(lineno), line[:-1], str(response))
+            time.sleep(int(config.newlinedelay) * .001)
 
-        # if last line isn't a line feed, fix and advise of error
+        # Determine if last line is a line feed, if not
+        # Warn and send a line feed as last line
         # subtract 1, as index goes from 0 and file counts from 1
         orig_index = lineno - 1
         if (not original[orig_index].endswith('\n')):
@@ -214,11 +251,14 @@ def xfr(parent_fname, parent_lineno, config):
             text.append(str(lineno), style="black")
             text.append(", must be only a new line, however, it contains: ")
             text.append(original[orig_index], style="black")
-            text.append("\nA new line was sent to ensure closing the last word in the file.")
+            text.append(
+                "\nNew line sent to ensure closing the last word in the file.")
             con.print(text, width=120)
+
         if compile_error:
             con.print(table)
         return [n_bytes_sent, lineno]
+
     except (OSError) as e:
         if parent_fname is not None:
             sys.stderr.write(f"*** {parent_fname}({parent_lineno}): {e} ***")

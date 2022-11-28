@@ -1,6 +1,3 @@
--blink
-marker -blink
-
 \ blink built-in LED
 : blink ( ms -- ) 
 	LED output 

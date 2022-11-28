@@ -1,8 +1,8 @@
 \ HAL: provides constants for LEDs and Buttons
 \ Ports, DDRx, PORTx and PINx, page 624 datasheet
-$23 constant PINB  \ Port B input register (-1 for input port)
-$24 constant DDRB  \ Port B data direction register (port reference)
-$25 constant PORTB \ Port B output register (+1 for output port)
+$23 constant PINB  \ Port B input register
+$24 constant DDRB  \ Port B data direction register 
+$25 constant PORTB \ Port B output register 
 $26 constant PINC  \ Port C input register
 $27 constant DDRC  \ Port C data direction register
 $28 constant PORTC \ Port C output register
@@ -19,7 +19,8 @@ $2b constant PORTD \ Port D output register
 %00000010 constant BIT1   \ bit 01  
 %00000001 constant BIT0   \ bit 00  
 
-\ Arduino Board Pins, reference using Board Pins, not AVR registers if possible
+\ Arduino Board Pins, reference using Board Pins
+\ not AVR registers if possible
 \ Pins referenced by nn, where nn is the Arduino board pin number
 BIT5 DDRC 2constant A5 \ Board Connector A5 PC5
 BIT4 DDRC 2constant A4 \ Board Connector A4 PC4
@@ -52,7 +53,7 @@ marker -us
 \ Atmega wdr instruction
 $95a8 op: wdr,
 
-\ Clear watchdog (wdr instruction) takes one clock cycle (62.5ns @ 16MHz)
+\ Clear watchdog (wdr instruction) takes one clock cycle
 \ Adjust the number of CWD to achieve a one us delay
 \ 9 CWD is needed @ 16MHz for ATmega 328 and 2560.
 : us ( u -- ) \ blocking wait for u microseconds
@@ -86,7 +87,8 @@ marker -end_HAL
 
 \ Timer 0 - Used for debouncing buttons
 \ Button debounce code based on Elliot Williams article
-\ https://hackaday.com/2015/12/10/embed-with-elliot-debounce-your-noisy-buttons-part-ii
+\ https://hackaday.com/2015/12/10/embed-with-elliot
+\ -debounce-your-noisy-buttons-part-ii
 \ Initialize Timer/Counter 0 to be a 2 button debouncer @125Hz
 \ Counter increments every 8ms
 \ TCCR0A [ COM0A1 COM0A0 COM0B1 COM0B0 0 0 WGM01 WGM00 ] = 00000001
@@ -225,3 +227,4 @@ dis_T0_OVF
   \ Activate timer0 overflow interrupt
   1 TIMSK0 mset
 ;
+marker -end_328P_HAL
