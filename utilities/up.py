@@ -135,12 +135,8 @@ def clean_file(c):
 
     for line in open(c.file, "rt"):
         if not (comment.match(line) or blankline.match(line)):
-            re.sub(
-                pattern=r'^\s(.*)(\\ .*)',
-                repl='\\1',
-                string=line
-            )
-            f.append(line)
+            no_comments = re.sub(r'^(.*?)(\\.*)', "\\1", line)
+            f.append(no_comments)
     return(f)
 
 
@@ -150,6 +146,7 @@ def rtoASCII(r):
     return
 
 
+# warm_ready sends a warm reset and waits for an ok
 def warm_ready(c):
     ready = b'  ok<#,ram> \r\n'             # ready response, ready for input
     warm = '\x0D'                           # hex code for a warm boot
@@ -158,21 +155,21 @@ def warm_ready(c):
         c.ser.write(str.encode(warm))
         time.sleep(int(c.newlinedelay) * .001)
         init_response = c.ser.readline()
+    return("warm")
 
 
+# empty_ready can follow a warm_ready, and sends the empty command
+# then waits for the empty command to be echoed back with an ok
 def empty_ready(c):
-    ready = b'  ok<#,ram> \r\n'              # ready response, ready for input
-    empty_cmd = 'empty\n'                    # empty line
-    new_line = '\n'                          # hex code for a warm boot
+    empty_cmd = 'empty\n\n'                  # empty line
+    empty_ready = b'empty  ok<#,ram> \r\n'   # ready response, ready for input
     init_response = ""
+
     c.ser.write(str.encode(empty_cmd))
-    print("empty command sent")
-
-    while (init_response != ready):
-        c.ser.write(str.encode(new_line))
-        time.sleep(int(c.newlinedelay) * .001)
+    print("empty word sent")
+    while (init_response != empty_ready):
         init_response = c.ser.readline()
-
+    return("empty")
 
 def main():
 
@@ -206,17 +203,17 @@ def xfr(parent_fname, parent_lineno, config):
 
     try:
         # FF responds with a reset message and line feed upon connection
-        table = Table(width=120)
-        table.add_column("Line", width=6, justify="right")
+        table = Table(width=105)
+        table.add_column("Line", width=4, justify="right")
         table.add_column("Original", width=50, justify="left")
         table.add_column("Response", width=50, justify="left")
         compile_error = False
 
         # Wait for a ready response from a warm boot, prior to uploading file
-        warm_ready(config)
+        response = warm_ready(config)
         if config.empty:
-            empty_ready(config)
-        print(f"Ready response received, uploading", config.file)
+            response = empty_ready(config)
+        print(f"{response} response received, uploading", config.file)
 
         clean_orig = clean_file(config)
 
