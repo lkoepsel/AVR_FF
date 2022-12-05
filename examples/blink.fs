@@ -36,5 +36,5 @@
 		rot dup ms rot rot
 		key?
 	until
-	drop drop
+	drop drop drop
 ;
