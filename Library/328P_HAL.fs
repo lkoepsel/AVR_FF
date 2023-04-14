@@ -1,3 +1,4 @@
+empty
 \ HAL: provides constants for LEDs and Buttons
 \ Ports, DDRx, PORTx and PINx, page 624 datasheet
 $23 constant PINB  \ Port B input register
@@ -64,7 +65,7 @@ $95a8 op: wdr,
   drop 
 ;
 
-: .mem_left ( ---)
+: .mem_left ( --- )
     cr ."  flash: "   flash  unused u.
     cr ." eeprom: "   eeprom unused u.
     cr ."    ram: "   ram    unused u. 
