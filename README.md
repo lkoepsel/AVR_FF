@@ -1,6 +1,8 @@
 # Programming the Arduino Uno in FlashForth
 
-This is a [FlashForth]() framework similar in concept to [AVR_C](https://github.com/lkoepsel/AVR_C) and the [Arduino](https://www.arduino.cc/reference/en/) frameworks. It will allow someone to come up to speed quickly using FlashForth on the Arduino Uno. While it references the pins the same as the Arduino/AVR_C framework, it doesn't use the same terminology.
+I originally thought of this framework as similar to the Arduino framework, where one has libraries which contain specialized code for specific operations. While that makes some sense, it isn't "Forth-like", in that it isn't the way Forth was designed to work. Or more importantly, as this continues to be a site to help someone program in Forth, the Arduino approach isn't appropriate to Forth.
+
+A key value of Forth, is that it enables the programmer to deeply understand the processor on which they are working. At times, this can be a detriment, as it takes much more time to translate a datasheet into working code as compared to downloading a library, this approach helps you learn how the processor works. This knowledge can be valuable as you continue to work with the processor.
 
 The file *m328Pdef.inc* is included in this repository to document AATmega328P constants, the file *Library/328P_HAL.fs* will be the Forth version of this, except it will base many of the constants per the UNO as mentioned above.
 
