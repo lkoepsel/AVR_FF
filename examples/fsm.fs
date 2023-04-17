@@ -73,7 +73,11 @@ D10      2constant LED_BLUE \ Transducer Blue LED
 
 variable FSM_STATE
 
-: init_LEDs BIT_0 output BIT_1 output LED_BLUE output ;
+: init_LEDs
+    BIT_0 output
+    BIT_1 output
+    LED_BLUE output
+;
 
 \ words which run when button 1 is pressed
 : init_STATE 0 FSM_STATE ! ;
@@ -88,28 +92,65 @@ variable FSM_STATE
 ;
 
 \ converts STATE to LED, made easy by using sequential pins
-: STATE2LED ( -- ) %00000011 PORTB mclr FSM_STATE @ PORTB mset ;
+: STATE2LED ( -- )
+    %00000011 PORTB mclr
+    FSM_STATE @ PORTB mset
+;
 
 \ There isn't a OCR1A value to turn the speaker off
 \ so the pin is made an input
-: OFF_speaker D10 input ;
+: OFF_speaker
+    D10 input
+;
 
 \ STATES to execute
-: STATE_0 OFF blue OFF_speaker ;
-: STATE_1 DIM blue AUDIBLE speaker ;
-: STATE_2 MED blue 22K speaker ;
-: STATE_3 MAX blue 40K speaker ;
+: STATE_0
+    OFF blue
+    OFF_speaker
+;
+
+: STATE_1
+    DIM blue
+    AUDIBLE speaker
+;
+
+: STATE_2
+    MED blue
+    22K speaker
+;
+
+: STATE_3
+    MAX blue
+    40K speaker
+;
 
 \ store jumptable in flash for STATES
 flash
-create STATES ' STATE_0 , ' STATE_1 , ' STATE_2 , ' STATE_3 , 
+create STATES
+    ' STATE_0 ,
+    ' STATE_1 ,
+    ' STATE_2 ,
+    ' STATE_3 ,
 
+ram
 \ jumptable word to execute entry based on STATE
 : do-STATE ( STATE -- )
-    cells STATES + @ execute ;
+    cells STATES + @
+    execute
+;
 
-: button_1 OFF blue OFF_speaker clr_pressed_1 check_STATE STATE2LED ;
-: button_2 clr_pressed_2 FSM_STATE @ do-STATE ;
+: button_1
+    OFF blue
+    OFF_speaker
+    clr_pressed_1
+    check_STATE STATE2LED
+;
+
+: button_2
+    clr_pressed_2
+    FSM_STATE @
+    do-STATE
+;
 
 : fsm ( -- )
     clr_pressed_1
@@ -129,5 +170,10 @@ create STATES ' STATE_0 , ' STATE_1 , ' STATE_2 , ' STATE_3 ,
 ;
 
 \ to start: init_T0_OV D2 pullup fsm
-: init_fsm init_T0_OV D2 pullup D4 pullup fsm ;
-' init_fsm is turnkey
+: init_fsm
+    init_T0_OV
+    D2 pullup
+    D4 pullup
+    fsm
+;
+\ ' init_fsm is turnkey
