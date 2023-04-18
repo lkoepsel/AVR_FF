@@ -1,4 +1,9 @@
 empty
+
+\ Operations
+\ duplicate top 3 items on stack
+: 3dup dup 2over rot ;
+
 \ HAL: provides constants for LEDs and Buttons
 \ Ports, DDRx, PORTx and PINx, page 624 datasheet
 $23 constant PINB  \ Port B input register
@@ -80,7 +85,8 @@ $95a8 op: wdr,
 : input ( bit port -- ) mclr ;  \ set a pin as input
 : pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
-
+: on high ;
+: off low ;
 : falkey false is turnkey ; \ use to reset turnkey vector
 
 -end_HAL
