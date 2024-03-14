@@ -1,5 +1,21 @@
 empty
 
+\ Operations
+\ duplicate top 3 items on stack
+: 3dup dup 2over rot ;
+
+\ HAL: provides constants for LEDs and Buttons
+\ Ports, DDRx, PORTx and PINx, page 624 datasheet
+$23 constant PINB  \ Port B input register
+$24 constant DDRB  \ Port B data direction register 
+$25 constant PORTB \ Port B output register 
+$26 constant PINC  \ Port C input register
+$27 constant DDRC  \ Port C data direction register
+$28 constant PORTC \ Port C output register
+$29 constant PIND  \ Port D input register
+$2a constant DDRD  \ Port D data direction register
+$2b constant PORTD \ Port D output register
+
 %10000000 constant BIT7   \ bit 07  
 %01000000 constant BIT6   \ bit 06  
 %00100000 constant BIT5   \ bit 05  
@@ -12,27 +28,27 @@ empty
 \ Arduino Board Pins, reference using Board Pins
 \ not AVR registers if possible
 \ Pins referenced by nn, where nn is the Arduino board pin number
-BIT5 ddrc 2constant A5 \ Board Connector A5 PC5
-BIT4 ddrc 2constant A4 \ Board Connector A4 PC4
-BIT3 ddrc 2constant A3 \ Board Connector A3 PC3
-BIT2 ddrc 2constant A2 \ Board Connector A2 PC2
-BIT1 ddrc 2constant A1 \ Board Connector A1 PC1
-BIT0 ddrc 2constant A0 \ Board Connector A0 PC0
-BIT5 ddrb 2constant LED \ Board Connector 13 PB5
-BIT5 ddrb 2constant D13 \ Board Connector 13 PB5
-BIT4 ddrb 2constant D12 \ Board Connector 12 PB4
-BIT3 ddrb 2constant D11 \ Board Connector 11 PB3 PWM OC2A
-BIT2 ddrb 2constant D10 \ Board Connector 10 PB2 PWM OC1B
-BIT1 ddrb 2constant D9  \ Board Connector  9 PB1 PWM OC1A
-BIT0 ddrb 2constant D8  \ Board Connector  8 PB0 
-BIT7 ddrd 2constant D7  \ Board Connector  7 PD7 
-BIT6 ddrd 2constant D6  \ Board Connector  6 PD6 PWM OC0A
-BIT5 ddrd 2constant D5  \ Board Connector  5 PD5 PWM OC0B
-BIT4 ddrd 2constant D4  \ Board Connector  4 PD4 
-BIT3 ddrd 2constant D3  \ Board Connector  3 PD3 PWM OC2B
-BIT2 ddrd 2constant D2  \ Board Connector  2 PD2 
-BIT1 ddrd 2constant D1  \ Board Connector  1 PD1 
-BIT0 ddrd 2constant D0  \ Board Connector  0 PD0
+BIT5 DDRC 2constant A5 \ Board Connector A5 PC5
+BIT4 DDRC 2constant A4 \ Board Connector A4 PC4
+BIT3 DDRC 2constant A3 \ Board Connector A3 PC3
+BIT2 DDRC 2constant A2 \ Board Connector A2 PC2
+BIT1 DDRC 2constant A1 \ Board Connector A1 PC1
+BIT0 DDRC 2constant A0 \ Board Connector A0 PC0
+BIT5 DDRB 2constant LED \ Board Connector 13 PB5
+BIT5 DDRB 2constant D13 \ Board Connector 13 PB5
+BIT4 DDRB 2constant D12 \ Board Connector 12 PB4
+BIT3 DDRB 2constant D11 \ Board Connector 11 PB3 PWM OC2A
+BIT2 DDRB 2constant D10 \ Board Connector 10 PB2 PWM OC1B
+BIT1 DDRB 2constant D9  \ Board Connector  9 PB1 PWM OC1A
+BIT0 DDRB 2constant D8  \ Board Connector  8 PB0 
+BIT7 DDRD 2constant D7  \ Board Connector  7 PD7 
+BIT6 DDRD 2constant D6  \ Board Connector  6 PD6 PWM OC0A
+BIT5 DDRD 2constant D5  \ Board Connector  5 PD5 PWM OC0B
+BIT4 DDRD 2constant D4  \ Board Connector  4 PD4 
+BIT3 DDRD 2constant D3  \ Board Connector  3 PD3 PWM OC2B
+BIT2 DDRD 2constant D2  \ Board Connector  2 PD2 
+BIT1 DDRD 2constant D1  \ Board Connector  1 PD1 
+BIT0 DDRD 2constant D0  \ Board Connector  0 PD0
 
 \ microseconds delay for Atmega
 marker -us
@@ -201,7 +217,7 @@ dis_T0_OVF
   D4 check_btn_2
 
   \ (optional) used to show update rate
-  BIT2 BIT4 or BIT5 or ddrd toggle
+  BIT2 BIT4 or BIT5 or DDRD toggle
 ;i
 
 
