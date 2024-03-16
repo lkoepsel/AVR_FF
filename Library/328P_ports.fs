@@ -71,14 +71,6 @@ marker -end_ports
 \ FPWM_1A: (freq dcA) Only D9 (T/C 1A) has a PWM frequency
 \ FPWM_1B: (freq dcB) Only D10 (T/C 1B) has a PWM frequency
 
-\ Timer 1 definitions pgs 140-166 DS40002061B
-$80 constant TCCR1A
-$81 constant TCCR1B
-$88 constant OCR1AL
-$89 constant OCR1AH
-$8a constant OCR1BL
-$8b constant OCR1BH
-
 \ freq: 8-bit resolution => duty cycle n/255
 1 1 2constant 62K_8
 2 1 2constant 8K_8
@@ -105,10 +97,10 @@ $8b constant OCR1BH
 \ res(1-3) resolution of counter (255, 511, 1023)
 \ dcx(1-res) n/resolution duty cycle, one for each pin
 : FPWM_1 ( freq dcA dcB -- )
-  OCR1BL ! \ n/resolution dcB
-  OCR1AL ! \ n/resolution dcA
-  %10100000 + TCCR1A c! \ COM1A1 COM1B1 res
-  %00001000 + TCCR1B c! \ WGM12 freq
+  ocr1bl ! \ n/resolution dcB
+  ocr1al ! \ n/resolution dcA
+  %10100000 + tccr1a c! \ COM1A1 COM1B1 res
+  %00001000 + tccr1b c! \ WGM12 freq
   D9 output
   D10 output
 ;
@@ -118,9 +110,9 @@ $8b constant OCR1BH
 \ res(1-3) resolution of counter (255, 511, 1023)
 \ dcx(1-res) n/resolution duty cycle, one for each pin
 : FPWM_1A ( freq dcA -- )
-  OCR1AL ! \ n/resolution dcA
-  %10000000 + TCCR1A c! \ COM1A1 res
-  %00001000 + TCCR1B c! \ WGM12 freq
+  ocr1al ! \ n/resolution dcA
+  %10000000 + tccr1a c! \ COM1A1 res
+  %00001000 + tccr1b c! \ WGM12 freq
   D9 output
 ;
 
@@ -129,9 +121,9 @@ $8b constant OCR1BH
 \ res(1-3) resolution of counter (255, 511, 1023)
 \ dcx(1-res) n/resolution duty cycle, one for each pin
 : FPWM_1B ( freq dcB -- )
-  OCR1BL ! \ n/resolution dcB
-  %00100000 + TCCR1A c! \ COM1B1 res
-  %00001000 + TCCR1B c! \ WGM12 freq
+  ocr1bl ! \ n/resolution dcB
+  %00100000 + tccr1a c! \ COM1B1 res
+  %00001000 + tccr1b c! \ WGM12 freq
   D10 output
 ;
 
