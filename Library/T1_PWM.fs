@@ -21,11 +21,9 @@
 \ FPWM_1A: (freq dcA) Only D9 (T/C 1A) has a PWM frequency
 \ FPWM_1B: (freq dcB) Only D10 (T/C 1B) has a PWM frequency
 
--T1_ctc
-marker -T1_ctc
 \ Timer 1 definitions pgs 140-166 DS40002061B
-$80 constant TCCR1A
-$81 constant TCCR1B
+32768 constant TCCR1A
+32769 constant TCCR1B
 $88 constant OCR1AL
 $89 constant OCR1AH
 $8a constant OCR1BL
@@ -86,3 +84,6 @@ $8b constant OCR1BH
   %00001000 + TCCR1B c! \ WGM12 freq
   D10 output
 ;
+
+-T1_ctc
+marker -T1_ctc

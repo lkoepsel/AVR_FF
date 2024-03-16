@@ -21,7 +21,76 @@ I have a complete [entry](https://wellys.com/posts/flashforth_compile/), however
 1. Increase the baud rate to 250K
 2. Add the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register.
 3. Change the prompt, so I know that this is a different version
-4. 
+### Steps to Compile
+#### 1. Get source
+Put the source on your desktop to keep FlashForth repository, clean.
+```bash
+cd Documents/flashforth
+cp -r avr/FF-ATMEGA.X/ ~/Desktop/FF-ATMEGA.X/
+cp -r avr/src/ ~/Desktop/FF-ATMEGA.X/src
+```
+#### 2. Use MPLAB X to create project
+Follow the following steps in MPLAB IDE:
+1. File -> New Project -> Standalone Project (*Microchip Embedded -> Application Project(s)*)
+    1. Device: 328P and Tool: Atmel ICE…
+    2. Choose *XC8* as your compiler (*XC8 2.45 works, 2.46 generates errors*)
+    3. *Browse* to Desktop and make the Project Folder *FF-ATMEGA.X*
+    4. Set Project Name: FF and Set as main project  (Creates FF.X folder which becomes the main folder)
+    5. Finish
+2. In the Projects column on the left, right-click on Source Files and add Existing Item *../src/ff-xc8.asm* (*you will need to click the file drop down and go up one folder, to select src folder then the file ff-xc8.asm*)
+3. Put the following text in *Production -> Set Project Configuration -> Customize -> XC8 Global Options -> Additional Options* then click *Apply* and *OK*
+```bash
+-DOPERATOR_UART="${OPERATOR_UART}" -nostartfiles
+```
+#### 3. Edit files to your needs
+##### *ff-xc8.asm*
+Convert all *<.inc>* references to *“.inc”* (include quotes on change)
+```bash
+# in Sublime Text, Shift-Cmd-F, be sure ".*" is checked for regex search
+(<)(.*)(\.inc)(>)
+"$2$3"
+# Made 3 replacements
+```
+**Optional**
+Change the following line 5792 (*search for FlashForth*), it can be anything you want to show up on reset.
+```C
+# original line
+        .ascii    "FlashForth 5 "
+# new line
+        .ascii    "FF 5 250k    "
+```
+**Confirm the new text length matches the same spacing as the previous text!**
+
+##### *config-xc8.inc*
+Change the following line 41, this increases baud rate to 250k
+```C
+# original line
+#define BAUDRATE0 38400
+# new line
+#define BAUDRATE0 250000
+```
+
+##### *registers.inc*
+Add the lines to look like this, adding the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register.:
+```C
+; list here the registers and constants you want to include in the FF core dictionar
+; The parameters are
+; constant value, word name, word flags (inline=0x20)
+m_const DDRB,ddrb,0
+m_const DDRC,ddrc,0
+m_const DDRD,ddrd,0
+```
+#### 4. In terminal
+```bash
+cd ~/Desktop/FF-ATMEGA.X/FF.X
+make clean all MP_PROCESSOR_OPTION=ATmega328 OPERATOR_UART=0
+cp dist/default/production/FF.X.production.hex ~/Desktop/FF.hex
+cd ~/Desktop
+# if your using Atmel ICE and ATmega328P (Uno)
+avrdude -p m328p -P usb  -c atmelice_isp -e -U flash:w:FF.hex :i -U efuse:w:0xff:m -U hfuse:w:0xda:m -U lfuse:w:0xff:m
+```
+
+
 ## examples folder
 * *blink* - classic *Hello, World* example for microcontrollers
 * *buttons* - demonstrates how to use button de-bouncing found in the HAL
