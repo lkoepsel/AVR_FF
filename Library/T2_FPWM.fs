@@ -1,3 +1,4 @@
+\ **18.7.3 Fast PWM Mode**
 \ Initialize Timer/Counter 2 to Fast PWM 
 \ Use to vary intensity of an LED
 \ Mode 3, Fast PWM, Top=OCRA, Clear OC2A on Compare Match
@@ -12,18 +13,12 @@
 -T2
 marker -T2
 
-\ Timer 2 definitions from m328pdef.inc
-$b0 constant TCCR2A
-$b1 constant TCCR2B
-$b3 constant OCR2A
 #127 constant clock2_per \ clock period for 50% duty
 
 \ initialize Timer/Counter 2 to Fast PWM, top = OCRA
 : init_T2  ( dc/255 -- )
-
-  \ Activate T/C 2 for Fast PWM
-  OCR2A c!
-  %10000011 TCCR2A c!
-  %00000010 TCCR2B c!
+  ocr2a c!
+  %10000011 tccr2a c!
+  %00000010 tccr2b c!
   D11 output
 ;

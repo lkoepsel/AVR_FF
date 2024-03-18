@@ -9,7 +9,7 @@ decimal
 5 constant fifty
 
 flash
-create TWENS
+create TENS
     1 ,
     10 ,
     20 ,
@@ -19,9 +19,12 @@ create TWENS
 
 ram
 : V2D
-    cells TWENS
+    cells TENS
     + @
 ;
 
 \ thirty V2D . 30  ok<#,ram>
 \ forty V2D . 40  ok<#,ram>
+
+-TABLE
+marker -TABLE

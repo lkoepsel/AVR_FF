@@ -71,15 +71,26 @@ Change the following line 41, this increases baud rate to 250k
 ```
 
 ##### *registers.inc*
-Add the lines to look like this, adding the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register.:
+Add the lines to look like this, adding the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register. Also adding the registers for the Timer/Counters.:
 ```C
 m_const DDRB,ddrb,0
 m_const DDRC,ddrc,0
 m_const DDRD,ddrd,0
+m_const TCCR0A,tccr0a,0
+m_const TCCR0B,tccr0b,0
+m_const OCR0A,ocr0a,0
+m_const OCR0B,ocr0b,0
 m_const TCCR1A,tccr1a,0
 m_const TCCR1B,tccr1b,0
 m_const OCR1AL,ocr1al,0
 m_const OCR1BL,ocr1bl,0
+m_const TCCR2A,tccr2a,0
+m_const TCCR2B,tccr2b,0
+m_const OCR2A,ocr2a,0
+m_const OCR2B,ocr2b,0
+m_const TIMSK0,timsk0,0
+m_const TIMSK1,timsk1,0
+m_const TIMSK2,timsk2,0
 ```
 #### 4. In terminal
 ```bash
@@ -87,7 +98,7 @@ cd ~/Desktop/FF-ATMEGA.X/FF.X
 make clean all MP_PROCESSOR_OPTION=ATmega328 OPERATOR_UART=0
 cp dist/default/production/FF.X.production.hex ~/Desktop/FF.hex
 cd ~/Desktop
-# if your using Atmel ICE and ATmega328P (Uno)
+# if your using Microchip SNAP and ATmega328P (Uno)
 avrdude -p m328p -P usb  -c snap_isp -e -U flash:w:FF.hex :i -U efuse:w:0xff:m -U hfuse:w:0xda:m -U lfuse:w:0xff:m
 ```
 

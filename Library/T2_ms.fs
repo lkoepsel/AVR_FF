@@ -1,3 +1,4 @@
+\ 18.7.4 Phase Correct PWM Mode
 \ Initialize Timer/Counter 2 to a 1000Hz interrupt (1ms)
 \ Use interrupt to drive multi-tasking code
 \ Counter increments every 1.0012ms
@@ -10,16 +11,9 @@
 \ Frequency = 16 x 10^6 / 32 / 250 = 2000Hz
 \ Counter performs another divide by 2 => 998.8Hz count freq
 \ Every interrupt incr by 1 and toggles D3, 2 toggles = 1 period
-\ Oscilloscope shows D3 toggles every 1.0012ms
-
--T2_int
-marker -T2_int
+\ Oscilloscope shows D3 toggles every 1.0007ms w period of 2.0015ms
 
 \ Timer 2 definitions from m328pdef.inc
-$b0 constant TCCR2A
-$b1 constant TCCR2B
-$b3 constant OCR2A
-$70 constant TIMSK2
 $0a constant T2_OVF_VEC \ vector number, not address
 $fa constant clock2_per \ clock period for comparison
 
@@ -28,7 +22,7 @@ variable ms_count      \ counter for milliseconds
 
 \ disable T/C 2 Overflow interrupt
 : dis_T2_OVF
-  1 TIMSK2 mclr
+  1 timsk2 mclr
 ;
 
 \ Disable interrupt before removing the interrupt code
@@ -37,7 +31,7 @@ dis_T2_OVF
 \ The interrupt routine
 : T2_OVF_ISR
   1 ms_count +!
-  D3 toggle
+  D3 tog
 ;i
 
 
@@ -47,13 +41,13 @@ dis_T2_OVF
   ['] T2_OVF_ISR T2_OVF_VEC int!
 
   \ Activate T/C 2 for a 1ms interrupt
-  %00000001 TCCR2A c!
-  %00001011 TCCR2B c!
-  clock2_per OCR2A c!
+  %00000001 tccr2a c!
+  %00001011 tccr2b c!
+  clock2_per ocr2a c!
 
   D3 output
   \ Activate timer2 overflow interrupt
-  1 TIMSK2 mset
+  1 timsk2 mset
 ;
 
 \ ms counter used to check accuracy, 
@@ -66,4 +60,6 @@ dis_T2_OVF
 ;
 
 \ to initialize T/C 2 for ms interrupt use: init_T2_OV
-\ to test for milliseconds, 100 check_ms, delta is 102
+\ to test for milliseconds, 100 check_ms, delta is 101
+-T2_MS
+marker -T2_MS
