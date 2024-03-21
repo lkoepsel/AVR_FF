@@ -23,6 +23,72 @@ $11 constant T0_OVF_VEC
 %1111.1100.0001.1111 constant BTN_MASK
 %0000.0000.0001.1111 constant BTN_DOWN
 
+2   constant button_count \ number of buttons    
+0   constant right
+1   constant left
+\ D5  2constant right_button
+\ D6  2constant left_button
+
+: array: ( n "name" -- )
+  create cells allot 
+  does> swap cells + 
+;
+
+: 2array: ( n "name" -- )
+  create 2* cells allot 
+  does> swap 2* cells + 
+;
+
+ram button_count array: history
+: history_init ( button -- ) history $ffff swap ! ;
+ram button_count array: pressed
+: pressed_init ( button -- ) pressed $0 swap ! ;
+: pressed_true ( button -- ) pressed $ffff swap ! ;
+ram button_count array: times
+: times_init ( button -- ) times $0000 swap ! ;
+ram button_count 2array: button_pin
+: pin_init ( pin button -- ) button_pin  2! ;
+
+: init ( pin button -- )
+    dup history_init
+    dup pressed_init
+    dup times_init
+    rot rot 2dup pullup
+    rot pin_init
+;
+
+: down? ( button -- f ) \ return True if button down
+    button_pin 2@ read if 0 else 1 then 
+;
+
+: str_history ( button f -- button ) \ store button state in history
+    over history @  2* or  over history !
+;
+
+: button_down? ( button -- button f )
+    dup
+    history @ 
+    BTN_MASK and 
+    BTN_DOWN = 
+;
+
+: pressed? ( button -- )
+    button_down?
+    if
+        dup
+        pressed_true
+        history_init
+        ." DOWN!"
+    else
+        drop
+    then
+;
+
+: check_btn ( button -- )
+\    dup down? str_history pressed_1?
+     dup down? str_history pressed?
+;
+
 \ button 1 definitions
 variable history_1
 variable pressed_1
@@ -49,6 +115,7 @@ variable count_1
     if
         pressed_true_1
         init_history_1
+        ." Down 1! "
     then
 ;
 
@@ -111,8 +178,8 @@ dis_T0_OVF
 \ mset uses a mask to set bits, the mask must include 
 \ all bits, in this case: D5, D6 and D6
 : T0_OVF_ISR
-  D5 check_btn_1
-  D6 check_btn_2
+  right check_btn
+  left check_btn
 
   \ (optional) used to show update rate
   BIT5 BIT6 or BIT7 or ddrd tog
@@ -129,10 +196,10 @@ dis_T0_OVF
   %0000.1100 tccr0b c!
   clock0_per ocr0a c!
 
-  D6 out \ (optional) used to show update rate
+  D7 out \ (optional) used to show update rate
   \ Activate timer0 overflow interrupt
   1 timsk0 mset
 ;
 
--DEBOUNCE
-marker -DEBOUNCE
+-end_debounce
+marker -end_debounce

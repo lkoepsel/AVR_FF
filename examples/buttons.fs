@@ -46,10 +46,10 @@
     again
 ;
 
-\ to start: init_T0_OV D2 pullup btn_count
-: buttons
+\ to start: init_T0_OV D5 pullup btn_count
+: count_buttons
     init_T0_OV
-    D2 pullup D4 pullup
+    D5 pullup D6 pullup
     btn_count
 ;
 marker -end_buttons

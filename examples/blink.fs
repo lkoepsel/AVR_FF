@@ -1,10 +1,3 @@
-%00100000 $24 2constant LED
-: out ( bit port -- ) mset ;  \ set pin as output
-: in ( bit port -- ) mclr ;  \ set pin as input
-: on ( bit port -- ) 1 + mset ;  \ set a pin high
-: off ( bit port -- ) 1 + mclr ;  \ set a pin low
-: tog ( bit port -- ) 1 - mset ; \ toggle the pin
-
 \ blink built-in LED, requires reset to stop
 : blink ( ms -- ) 
     LED out 
@@ -29,7 +22,7 @@
 : plink ( ms pin -- ) 
     2dup out 
     begin 
-        2dup toggle 
+        2dup tog
         rot dup ms rot rot
     again
 ;
@@ -38,7 +31,7 @@
 : plink? ( ms pin -- ) 
     2dup out 
     begin 
-        2dup toggle 
+        2dup tog
         rot dup ms rot rot
         key?
     until

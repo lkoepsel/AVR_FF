@@ -5,8 +5,8 @@
 1   constant pressed
 2   constant count
 
-right   constant 0
-left    constant 1
+0	constant right
+1	constant left
 
-create button buttons count 1 + * cells allot
-
+\ create button buttons count 1 + * cells allot
+: .button buttons count 1 + * . ;

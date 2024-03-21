@@ -38,9 +38,9 @@ BIT0 ddrd 2constant D0  \ Board Connector  0 PD0
 : high ( bit port -- ) 1 + mset ;  \ set a pin high
 : low ( bit port -- ) 1 + mclr ;  \ set a pin low
 : tog ( bit port -- ) 1 - mset ; \ toggle output value
-: output ( bit port -- ) mset ;  \ set pin as output
-: input ( bit port -- ) mclr ;  \ set a pin as input
-: pullup ( bit port -- ) 2dup input high ; \ set pin as input_pullup
+: out ( bit port -- ) mset ;  \ set pin as output
+: in ( bit port -- ) mclr ;  \ set a pin as input
+: pullup ( bit port -- ) 2dup in high ; \ set pin as input_pullup
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
 : on high ;
 : off low ;

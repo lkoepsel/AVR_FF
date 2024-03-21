@@ -1,4 +1,4 @@
-Port = usbmodem3101
+Port = usbserial-AR0JYQQB
 BaudRate = 250000
 DataBits = 8
 Parity = N
