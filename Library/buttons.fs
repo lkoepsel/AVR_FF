@@ -163,7 +163,7 @@ marker -end_debounce
 : count_buttons
     init_T0_OV
     D5 right init D6 left init
-    btn_count
+    cr btn_count
 ;
 marker -end_buttons
 \ ' buttons is turnkey
