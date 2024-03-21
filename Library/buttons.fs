@@ -26,29 +26,37 @@ $11 constant T0_OVF_VEC
 2   constant button_count \ number of buttons    
 0   constant right
 1   constant left
-\ D5  2constant right_button
-\ D6  2constant left_button
 
+\ creates an indexed cell array as in "n name" with n as the index
 : array: ( n "name" -- )
   create cells allot 
   does> swap cells + 
 ;
 
+\ creates an indexed 2cell array as in "n name" with n as the index
 : 2array: ( n "name" -- )
   create 2* cells allot 
   does> swap 2* cells + 
 ;
 
+\ history tracks the state history of the button
 ram button_count array: history
 : history_init ( button -- ) history $ffff swap ! ;
+
+\ pressed indicates if the button has been pressed, initialized to 0 (false)
 ram button_count array: pressed
 : pressed_init ( button -- ) pressed $0 swap ! ;
 : pressed_true ( button -- ) pressed $ffff swap ! ;
+
+\ times tracks the number of times the button has been pressed
 ram button_count array: times
 : times_init ( button -- ) times $0000 swap ! ;
+
+\ button_pin attaches a pin to a button, use the Arduino pin references
 ram button_count 2array: button_pin
 : pin_init ( pin button -- ) button_pin  2! ;
 
+\ ties pin to button and initializes all arrays associated with button
 : init ( pin button -- )
     dup history_init
     dup pressed_init
@@ -57,14 +65,19 @@ ram button_count 2array: button_pin
     rot pin_init
 ;
 
+\ Begin the button check code
+
+\ down? determines if button is down (with pullup, false so reverses logic)
 : down? ( button -- f ) \ return True if button down
     button_pin 2@ read if 0 else 1 then 
 ;
 
-: str_history ( button f -- button ) \ store button state in history
+\ store_state - stores the current button state in history
+: store_state ( button f -- button ) \ store button state in history
     over history @  2* or  over history !
 ;
 
+\ button_down? determines if the down pattern counts as a press, returns true if so
 : button_down? ( button -- button f )
     dup
     history @ 
@@ -72,6 +85,8 @@ ram button_count 2array: button_pin
     BTN_DOWN = 
 ;
 
+\  pressed? uses button_down? to determined if pressed, if so, sets variable
+\ and clears history
 : pressed? ( button -- )
     button_down?
     if
@@ -83,8 +98,9 @@ ram button_count 2array: button_pin
     then
 ;
 
+\ check_btn is used by ISR to check for if button is pressed
 : check_btn ( button -- )
-     dup down? str_history pressed?
+     dup down? store_state pressed?
 ;
 
 
