@@ -143,10 +143,14 @@ dis_T0_OVF
 -end_debounce
 marker -end_debounce
 
+\ Application code, in this case tracks number of times a button has been pressed
+
+\ when button has been pressed, increment the variable times
 : incr_times ( button -- )
     dup times @ 1+ swap times !
 ;
 
+\ display the number of times a button has been pressed
 : .times ( button -- )
     dup . ." button pressed "
     times @ .
@@ -154,15 +158,16 @@ marker -end_debounce
 ;
 
 
+\ when a button has been pressed, reset its pressed status
+\ increment its times variable and print its times value
 : button ( button -- )
     dup pressed_init
     dup incr_times
     .times
 ;
 
+\ main application loop, continues to check for button presses
 : btn_count ( -- )
-    right pressed_init
-    left pressed_init
     begin
         right pressed @ 
         if 
@@ -175,10 +180,11 @@ marker -end_debounce
     again
 ;
 
-\ to start: init_T0_OV D5 pullup btn_count
+\ application: count_buttons - initialize then count button presses
 : count_buttons
     init_T0_OV
-    D5 right init D6 left init
+    D5 right init 
+    D6 left init
     cr btn_count
 ;
 marker -end_buttons
