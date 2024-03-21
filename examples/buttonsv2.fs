@@ -3,9 +3,9 @@
 ;
 
 : .times ( button -- )
-    dup . cr ." button pressed "
+    dup . ." button pressed "
     times @ .
-    ." times"
+    ." times" cr
 ;
 
 
