@@ -44,6 +44,7 @@ BIT0 ddrd 2constant D0  \ Board Connector  0 PD0
 : read ( bit port -- f ) 1 - c@ and ; \ read a pin, returns bit value
 : on high ;
 : off low ;
-
+: enable mset ;  \ enable an interrupt
+: disable mclr ; \ disable an interrupt
 -end_ports
 marker -end_ports

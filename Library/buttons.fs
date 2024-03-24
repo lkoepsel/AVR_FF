@@ -67,8 +67,8 @@ ram button_count 2array: button_pin
 
 \ Begin the button check code
 
-\ down? determines if button is down (with pullup, false so reverses logic)
-: down? ( button -- f ) \ return True if button down
+\ state? determines if button is down, (in pullup mode, so 0 is true)
+: state? ( button -- f ) \ return True if button down
     button_pin 2@ read if 0 else 1 then 
 ;
 
@@ -77,18 +77,18 @@ ram button_count 2array: button_pin
     over history @  2* or  over history !
 ;
 
-\ button_down? determines if the down pattern counts as a press, returns true if so
-: button_down? ( button -- button f )
+\ down? determines if the down pattern counts as a press, returns true if so
+: down? ( button -- button f )
     dup
     history @ 
     BTN_MASK and 
     BTN_DOWN = 
 ;
 
-\  pressed? uses button_down? to determined if pressed, if so, sets variable
+\  set_pressed uses down? to determined if pressed, if so, sets array pressed
 \ and clears history
-: pressed? ( button -- )
-    button_down?
+: set_pressed ( button -- )
+    down?
     if
         dup
         pressed_true
@@ -98,46 +98,45 @@ ram button_count 2array: button_pin
     then
 ;
 
-\ check_btn is used by ISR to check for if button is pressed
-: check_btn ( button -- )
-     dup down? store_state pressed?
+\ check_button is used by ISR to check for if button is pressed
+: check_button ( button -- )
+     dup state? store_state set_pressed
 ;
 
 
-\ T0 definitions
-\ disable T/C 0 Overflow interrupt
-: dis_T0_OVF
-  1 timsk0 mclr
-;
+\ Timer/Counter 0 - Debounce Clock (dbnce_clk) definitions
+\ disable or enable clock
+: dbnce_clk 1 timsk0 ;
 
 \ Disable interrupt before removing the interrupt code
-dis_T0_OVF
+dbnce_clk disable
 
-\ The interrupt routine
-\ mset uses a mask to set bits, the mask must include 
-\ all bits, in this case: D5, D6 and D6
-: T0_OVF_ISR
-  right check_btn
-  left check_btn
+\ Debounce Clock ISR: Check button interrupt routine, runs every 8ms
+: dbnce_clk_ISR
+    right check_button
+    left check_button
 
-  \ (optional) used to show update rate
-  BIT5 BIT6 or BIT7 or ddrd tog
+    \ (optional) used to confirm ISR execution rate
+    \ if used be sure to adjust mask for same port bits being used for buttons
+    \ mset uses a mask to set bits, so mask must include 
+    \ bits used in same port, in this case: D5, D6 and D7
+    BIT5 BIT6 or BIT7 or ddrd tog
 ;i
 
 
-\ initialize T/C 0 Overflow interrupt
-: init_T0_OV  ( OCR0A -- )
+\ initialize Debounce Clock interrupt
+: init_dbnce_clk  ( OCR0A -- )
   \ Store the interrupt vector
-  ['] T0_OVF_ISR T0_OVF_VEC int!
+  ['] dbnce_clk_ISR T0_OVF_VEC int!
 
-  \ Activate T/C 0 for a 1ms interrupt
+  \ Activate T/C 0 for an 8ms interrupt
   %0000.0001 tccr0a c!
   %0000.1100 tccr0b c!
   clock0_per ocr0a c!
 
-  D7 out \ (optional) used to show update rate
-  \ Activate timer0 overflow interrupt
-  1 timsk0 mset
+  D7 out \ (optional) used to show ISR execution rate
+  \ Activate Debounce Clock interrupt
+  dbnce_clk enable
 ;
 
 -end_debounce
@@ -182,11 +181,41 @@ marker -end_debounce
 
 \ application: count_buttons - initialize then count button presses
 : count_buttons
-    init_T0_OV
+    init_dbnce_clk
     D5 right init 
     D6 left init
     cr btn_count
 ;
+
+\ test code: determine execution time required to check button
+\ toggles pin for measuring execution time to determine button handling speed
+\ pin set in routine, to reduce overhead due to measurement
+\ 46us total time, 4.6us loop time => 41.5us check_button time
+: time_button ( -- )
+    D7 out
+    D5 right init
+    right
+    begin
+        right check_button
+        D7 tog
+    again
+;
+
+\ test timer: test a value to determine desired interrupt frequency
+: test_timer  ( n -- )
+  \ Store the interrupt vector
+  ['] dbnce_clk_ISR T0_OVF_VEC int!
+
+  \ Activate T/C 0 for an interrupt, OCR0A value on stack
+  %0000.0001 tccr0a c!
+  %0000.1100 tccr0b c!
+  ocr0a c!
+
+  D7 out \ used to show ISR execution rate
+  \ Activate timer0 overflow interrupt
+  dbnce_clk enable
+;
+
 marker -end_buttons
 \ ' buttons is turnkey
 
