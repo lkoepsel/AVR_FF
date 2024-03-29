@@ -46,5 +46,10 @@ BIT0 ddrd 2constant D0  \ Board Connector  0 PD0
 : off low ;
 : enable mset ;  \ enable an interrupt
 : disable mclr ; \ disable an interrupt
+
+BIT2 ddrd 2constant blue  \ Board Connector  2 PD2 blue LED
+BIT3 ddrd 2constant green \ Board Connector  2 PD3 green LED
+BIT4 ddrd 2constant red   \ Board Connector  2 PD4 red LED
+
 -end_ports
 marker -end_ports

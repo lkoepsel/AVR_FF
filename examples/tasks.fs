@@ -17,14 +17,14 @@ marker -tasks
 ;
 
 \ 2. Define 8 tasks, each to toggle a specific pin
-: task0 D2 toggle ;
-: task1 D3 toggle ;
-: task2 D4 toggle ;
-: task3 D5 toggle ;
-: task4 D6 toggle ;
-: task5 D7 toggle ;
-: task6 D8 toggle ;
-: task7 D9 toggle ;
+: task0 D2 tog ;
+: task1 D3 tog ;
+: task2 D4 tog ;
+: task3 D5 tog ;
+: task4 D6 tog ;
+: task5 D7 tog ;
+: task6 D8 tog ;
+: task7 D9 tog ;
 
 \ 3. Cycle through each task
 

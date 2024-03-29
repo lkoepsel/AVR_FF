@@ -120,7 +120,7 @@ dbnce_clk disable
     \ if used be sure to adjust mask for same port bits being used for buttons
     \ mset uses a mask to set bits, so mask must include 
     \ bits used in same port, in this case: D5, D6 and D7
-    BIT5 BIT6 or BIT7 or ddrd tog
+    BIT4 BIT5 or BIT6 or BIT7 or ddrd tog
 ;i
 
 
@@ -154,6 +154,7 @@ marker -end_debounce
     dup . ." button pressed "
     times @ .
     ." times" cr
+    red tog
 ;
 
 
@@ -184,6 +185,9 @@ marker -end_debounce
     init_dbnce_clk
     D5 right init 
     D6 left init
+    blue out
+    green out
+    red out
     cr btn_count
 ;
 

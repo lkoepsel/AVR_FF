@@ -75,3 +75,6 @@ marker -bit
   $9508 i,            \ return
   postpone [
 ;
+
+-speed-test
+marker -speed-test
