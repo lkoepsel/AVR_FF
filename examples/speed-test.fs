@@ -17,8 +17,8 @@ $0003 constant pinb-io  \ IO-space address
   initPB5
   [
   begin,
-    portb-io #5 sbi,  portb-io #5 cbi, \ one cycle, on and off
-    portb-io #5 sbi,  portb-io #5 cbi,
+    portb-io #5 sbi,  portb-io #5 cbi, \ 3.3Mhz, one cycle, on and off
+    portb-io #5 sbi,  portb-io #5 cbi, \ not symmetrical
     portb-io #5 sbi,  portb-io #5 cbi,
     portb-io #5 sbi,  portb-io #5 cbi,
     wdr,
@@ -26,13 +26,12 @@ $0003 constant pinb-io  \ IO-space address
   ]
 ;
 
-\ low-level bit fiddling, via assembler
+\ use toggle command to flip bits, allows for symmetry
 : blink-tog ( -- )
   initPB5
   [
   begin,
-    pinb-io #5 sbi,  pinb-io #5 cbi, \ one cycle, toggle twice for on/off
-    wdr,
+    pinb-io #5 sbi,  \ one toggle per loop, 2MHz or 4 clock cycles, symmetrical
   again,
   ]
 ;
