@@ -34,6 +34,11 @@ BIT2 ddrd 2constant D2  \ Board Connector  2 PD2
 BIT1 ddrd 2constant D1  \ Board Connector  1 PD1 
 BIT0 ddrd 2constant D0  \ Board Connector  0 PD0
 
+\ I/O memory references to port registers
+$0005 constant portb-io \ IO-space address
+$0003 constant pinb-io  \ IO-space address
+$0009 constant pind-io  \ IO-space address
+
 \ PRIM: primitives for initializing port and set high or low output
 : high ( bit port -- ) 1 + mset ;  \ set a pin high
 : low ( bit port -- ) 1 + mclr ;  \ set a pin low

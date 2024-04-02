@@ -279,3 +279,6 @@ $0e constant -X
 01  constant XH:XL  \ XH:XL 3F adiw, sbiw,
 02  constant YH:YL
 03  constant ZH:ZL
+
+marker -end_asm
+
