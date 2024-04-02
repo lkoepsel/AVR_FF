@@ -52,9 +52,12 @@ $0009 constant pind-io  \ IO-space address
 : enable mset ;  \ enable an interrupt
 : disable mclr ; \ disable an interrupt
 
-BIT2 ddrd 2constant blue  \ Board Connector  2 PD2 blue LED
-BIT3 ddrd 2constant green \ Board Connector  2 PD3 green LED
-BIT4 ddrd 2constant red   \ Board Connector  2 PD4 red LED
+: .mem_left ( --- )
+    cr ."  flash: "   flash  unused u.
+    cr ." eeprom: "   eeprom unused u.
+    cr ."    ram: "   ram    unused u. 
+    cr 
+;
 
 -end_ports
 marker -end_ports
