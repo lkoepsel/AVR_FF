@@ -71,11 +71,17 @@ Change the following line 41, this increases baud rate to 250k
 ```
 
 #### *registers.inc*
-Add the lines to look like this, adding the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register. Also adding the registers for the Timer/Counters.:
+Add the lines to look like this, adding the 3 registers for each of the ports, Port B, Port C and Port D. Also adding the registers for the Timer/Counters.:
 ```C
+m_const PINB,pinb,0
 m_const DDRB,ddrb,0
+m_const PORTB,portb,0
+m_const PINC,pinc,0
 m_const DDRC,ddrc,0
+m_const PORTC,portc,0
+m_const PIND,pind,0
 m_const DDRD,ddrd,0
+m_const PORTD,portd,0
 m_const TCCR0A,tccr0a,0
 m_const TCCR0B,tccr0b,0
 m_const OCR0A,ocr0a,0
@@ -93,7 +99,21 @@ m_const TIMSK1,timsk1,0
 m_const TIMSK2,timsk2,0
 ```
 This step is optional, if you don't make these changes, you will need to add references in your *HAL*.
-### 4. In terminal
+
+### 4.Wiring Details
+
+| Description | SNAP SIL | Uno ICSP |Wire Color
+| :--------- | :----------: | :-----: | -------:
+| NC         | 1         |          |         |
+| VTG        | 2         | 2        | Red     | 
+| GND        | 3         | 6        | Black   | 
+| MISO       | 4         | 1        | Yellow  | 
+| SCK        | 5         | 3        | Orange  | 
+| RESET      | 6         | 5        | White   |
+| MOSI       | 7         | 4        | Green   | 
+| NC         | 8         |          |         |
+
+### 5. In terminal
 ```bash
 cd ~/Desktop/FF-ATMEGA.X/FF.X
 make clean all MP_PROCESSOR_OPTION=ATmega328 OPERATOR_UART=0
