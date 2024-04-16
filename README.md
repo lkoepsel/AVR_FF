@@ -113,6 +113,7 @@ This step is optional, if you don't make these changes, you will need to add ref
 | MOSI       | 7         | 4        | Green   | 
 | NC         | 8         |          |         |
 
+![Uno Connector](Uno_ICSP.png "Uno Connector")
 ### 5. In terminal
 ```bash
 cd ~/Desktop/FF-ATMEGA.X/FF.X
@@ -120,7 +121,7 @@ make clean all MP_PROCESSOR_OPTION=ATmega328 OPERATOR_UART=0
 cp dist/default/production/FF.X.production.hex ~/Desktop/FF.hex
 cd ~/Desktop
 # if your using Microchip SNAP and ATmega328P (Uno)
-avrdude -p m328p -P usb  -c snap_isp -e -U flash:w:FF.hex :i -U efuse:w:0xff:m -U hfuse:w:0xda:m -U lfuse:w:0xff:m
+avrdude -p m328p -P usb  -c snap_isp -e -U flash:w:FF.hex :i -U efuse:w:0xfc:m -U hfuse:w:0xdf:m -U lfuse:w:0xff:
 ```
 
 ### 5. Load Hardware Abstraction Layer (HAL)
