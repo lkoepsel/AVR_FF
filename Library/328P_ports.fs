@@ -52,12 +52,5 @@ $0009 constant pind-io  \ IO-space address
 : enable mset ;  \ enable an interrupt
 : disable mclr ; \ disable an interrupt
 
-: .mem_left ( --- )
-    cr ."  flash: "   flash  unused u.
-    cr ." eeprom: "   eeprom unused u.
-    cr ."    ram: "   ram    unused u. 
-    cr 
-;
-
 -end_ports
 marker -end_ports

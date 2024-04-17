@@ -45,6 +45,14 @@ hex ram
 \ addr -- addr+1 n 
 : count c@+ ;
 
+: .mem_left ( --- )
+    cr ."  flash: "   flash  unused u.
+    cr ." eeprom: "   eeprom unused u.
+    cr ."    ram: "   ram    unused u. 
+    cr 
+;
+
+
 hex ram
 
 -end_core

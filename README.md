@@ -113,8 +113,13 @@ This step is optional, if you don't make these changes, you will need to add ref
 | MOSI       | 7         | 4        | Green   | 
 | NC         | 8         |          |         |
 
+### Uno Connector
 ![Uno Connector](Uno_ICSP.png "Uno Connector")
+
+### Nano Connector
 ![Nano Connector](Nano_ICSP.png "Nano Connector")
+**NOTE:** The Nano ICSP pin 1 is diagonally opposite of the Uno pin 1.
+
 ### 5. In terminal
 ```bash
 cd ~/Desktop/FF-ATMEGA.X/FF.X
