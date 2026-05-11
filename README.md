@@ -4,7 +4,7 @@ I originally thought of this framework as similar to the *Arduino* framework, wh
 
 A key value of *Forth*, is that it enables the programmer to deeply understand the processor on which they are working. At times, this can be a detriment, as it takes much more time to translate a datasheet into working code as compared to downloading a library, however, this approach helps you learn how the processor works. This knowledge can be valuable as you continue to work with the processor.
 
-The file *m328Pdef.inc* is included in this repository to document AATmega328P constants, the file *Library/328P_HAL.fs* is the *Forth* version of this, except it will base many of the constants per the UNO as mentioned above.
+The file *m328Pdef.inc* is included in this repository to document ATmega328P constants, the file *Library/328P_HAL.fs* is the *Forth* version of this, except it will base many of the constants per the UNO as mentioned above.
 
 The ATmega328P datasheet is the ultimate arbiter of register names and usage.
 
