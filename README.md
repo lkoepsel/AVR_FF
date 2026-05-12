@@ -2,9 +2,7 @@
 
 I originally thought of this framework as similar to the *Arduino* framework, where one had libraries which contain specialized code for specific operations. While a Hardware Abstraction Layer (HAL) makes sense, creating Libraries in the vein of the *Arduino* framework, does not. It isn't "Forth-like", in that Libraries aren't the way *Forth* was designed to work. Or most importantly, as this continues to be a site to help someone program in *Forth*, the *Arduino* approach isn't appropriate to developing code in *Forth*.
 
-A key value of *Forth*, is that it enables the programmer to deeply understand the processor on which they are working. At times, this can be a detriment, as it takes much more time to translate a datasheet into working code as compared to downloading a library, however, this approach helps you learn how the processor works. This knowledge can be valuable as you continue to work with the processor.
-
-The file *m328Pdef.inc* is included in this repository to document ATmega328P constants, the file *Library/328P_HAL.fs* is the *Forth* version of this, except it will base many of the constants per the UNO as mentioned above.
+A key value of *Forth*, is that it enables the programmer to deeply understand the processor on which they are working. At times, this can be a detriment, as it takes much more time to translate a datasheet into working code as compared to downloading a library, however, this approach helps you learn how the processor works. This knowledge can be valuable as you continue to work with the processor. The file *m328Pdef.inc* is included in this repository to document ATmega328P constants, the file *Library/328P_HAL.fs* is the *Forth* version of this, except it will base many of the constants per the UNO as mentioned above.
 
 The ATmega328P datasheet is the ultimate arbiter of register names and usage.
 
@@ -12,14 +10,20 @@ The ATmega328P datasheet is the ultimate arbiter of register names and usage.
 This code is being developed for the *Arduino* *Uno*. Also works on the *Arduino Nano* and the *Microchip 328PB Xplained Mini*.
 
 ## Automating serial transfers
-In developing code, it helps to automate the mundane tasks, in particular, uploading files to the microcontroller board. As I have several development environments which require such automation, I created a repository specific to the task, [CT_build](https://github.com/lkoepsel/CT_build). As in *CoolTerm build*, as it automates microcontroller upload tasks for *C*, *MicroPython* and *FlashForth* along with reconnecting *CoolTerm*.
 
-The previously existing *utilities* folder has been replaced by the *up* tool in the repository above.
+**[macOS only]** In developing code, it helps to automate the mundane tasks, in particular, uploading files to the microcontroller board. As I have several development environments which require such automation, I created a repository specific to the task, [CT_build](https://github.com/lkoepsel/CT_build). As in *CoolTerm build*, as it automates microcontroller upload tasks for *C*, *MicroPython* and *FlashForth* along with reconnecting *CoolTerm*. *Per Roger Meier's comments, CoolTerm isn't quite a solid Linux citizen, so its best used with macOS.*
+
+**[Linux]** In Linux, I use *tio* as the serial program and for loading source files, I use a utility, *fu.py*. WIth the help of claude, I created a new version of *up.py*, which claude named *fu.py* for *forth upload* This utility is installed using *uv* as in `uv tool install . `. This utility will upload a forth source file, quite quickly. A typical usage is:
+```
+fu Library/328P_ports.fs
+fu examples/blink.fs
+tio forth
+```
 
 ## Compiling FlashForth
 I have a complete [entry](https://wellys.com/posts/flashforth_compile/), however, I will touch on it here as well. Its beneficial to compile your own version as it allows you to continue to make things more efficient for you. For example, I do the following:
 1. Increase the baud rate to 250K
-2. Added multiple registers (see below), including the 3 DDRn registers, DDRB, DDRC and DDRD. It's easy to reference the other two registers for each port, off of the DDRn register.
+2. Added most of the I/O registers (see below)
 3. Change the prompt, so I know that this is a different version
 ## Steps to Compile
 ### 1. Get source
@@ -32,8 +36,8 @@ cp -r avr/src/ ~/Desktop/FF-ATMEGA.X/src
 ### 2. Use MPLAB X to create project
 Follow the following steps in MPLAB IDE:
 1. File -> New Project -> Standalone Project (*Microchip Embedded -> Application Project(s)*)
-    1. Device: 328P and Tool: Atmel ICE…
-    2. Choose *XC8* as your compiler (**XC8 2.45 works, 2.46 generates errors**)
+    1. Device: 328P and Tool: Atmel ICE… (*Optional*, see **Note A.**)
+    2. Choose *XC8* as your compiler
     3. *Browse* to Desktop and make the Project Folder *FF-ATMEGA.X*
     4. Set Project Name: FF and Set as main project  (Creates FF.X folder which becomes the main folder)
     5. Finish
@@ -44,13 +48,6 @@ Follow the following steps in MPLAB IDE:
 ```
 ### 3. Edit files to your needs
 #### *ff-xc8.asm*
-Convert all *<.inc>* references to *“.inc”* (include quotes on change). Mikael believes this isn't required, I have yet to find the magic incantation which makes this go away.
-```bash
-# in Sublime Text, Shift-Cmd-F, be sure ".*" is checked for regex search
-(<)(.*)(\.inc)(>)
-"$2$3"
-# Made 3 replacements
-```
 **Optional**
 Change the following line 5792 (*search for FlashForth*), it can be anything you want to show up on reset.
 ```C
@@ -98,8 +95,9 @@ m_const TIMSK0,timsk0,0
 m_const TIMSK1,timsk1,0
 m_const TIMSK2,timsk2,0
 ```
-This step is optional, if you don't make these changes, you will need to add references in your *HAL*.
+This step is optional, if you don't make these changes, you will need to add references in your *HAL*. This causes line *3506* `rcall DOTBASE` command to fail (*rcall is relative call*), change it to be a `call DOTBASE` and it will compile properly.
 
+**Note A:** Once the project has been created in *MPLAB X*, it can be moved to another machine. That said, if the second system has a different location for the executables (compiler etc), it requires a session with *claude* to get those references fixed. The good news is once, fixed, you may use the `make` command to create new *FlashForth* versions without *MPLAB X*.
 ### 4.Wiring Details
 
 | Description | SNAP SIL | Uno ICSP |Wire Color
