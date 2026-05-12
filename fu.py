@@ -224,6 +224,10 @@ def fu(file, port, baud, timeout, delay, pipe, clean, verbose):
     # Resolve port: explicit > auto-detected > hardcoded default
     resolved_port = port or _detect_port() or FORTH_PORT
 
+    t0 = time.monotonic()
+    chars_sent = 0
+    exit_code = 0
+
     try:
         with serial.Serial(resolved_port, baud, timeout=timeout) as ser:
             time.sleep(0.1)
@@ -237,6 +241,7 @@ def fu(file, port, baud, timeout, delay, pipe, clean, verbose):
                 # 'empty' is especially slow as it erases all user flash.
                 if bare in _CONTEXT_WORDS:
                     ser.write((bare + "\r\n").encode())
+                    chars_sent += len(bare) + 2
                     if verbose:
                         click.echo(
                             f"[{orig_lineno:4d}] {bare}  (waiting for context switch)"
@@ -247,10 +252,12 @@ def fu(file, port, baud, timeout, delay, pipe, clean, verbose):
                             f"Error on line {orig_lineno}: '{bare}' got no confirmation",
                             err=True,
                         )
-                        raise SystemExit(1)
+                        exit_code = 1
+                        break
                     continue
 
                 ser.write((bare + "\r\n").encode())
+                chars_sent += len(bare) + 2
 
                 if verbose:
                     click.echo(f"[{orig_lineno:4d}] {bare}")
@@ -267,16 +274,33 @@ def fu(file, port, baud, timeout, delay, pipe, clean, verbose):
                 else:
                     ok, response = _wait_for_ok(ser, timeout)
                     if not ok:
+                        # Lines starting with '-' are marker deletions; a '?'
+                        # response on first upload is expected (marker not yet
+                        # defined) and is not a fatal error.
+                        if bare.startswith("-"):
+                            if verbose:
+                                click.echo(
+                                    f"[{orig_lineno:4d}] warning: '{bare}' not yet defined"
+                                )
+                            continue
                         click.echo(f"Error on line {orig_lineno}: {bare}", err=True)
                         if response.strip():
                             click.echo(f"  Response: {response.strip()}", err=True)
-                        raise SystemExit(1)
+                        exit_code = 1
+                        break
 
     except serial.SerialException as exc:
         click.echo(f"Serial error: {exc}", err=True)
-        raise SystemExit(1)
+        exit_code = 1
 
-    click.echo(f"Uploaded {len(cleaned)} lines from {file}")
+    elapsed = time.monotonic() - t0
+    rate = int(chars_sent / elapsed) if elapsed > 0 else 0
+    click.echo(
+        f"Uploaded {len(cleaned)} lines, {chars_sent} chars"
+        f" in {elapsed:.2f}s ({rate} chars/sec)"
+    )
+    if exit_code:
+        raise SystemExit(exit_code)
 
 
 if __name__ == "__main__":
