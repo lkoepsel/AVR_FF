@@ -1,0 +1,2 @@
+[console_scripts]
+fu = fu:fu

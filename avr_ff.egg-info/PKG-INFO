@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: avr-ff
+Version: 1.0.0
+Summary: FlashForth upload tool for AVR microcontrollers
+Requires-Python: >=3.12
+Requires-Dist: click>=8.0
+Requires-Dist: pyserial>=3.5

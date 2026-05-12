@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "avr-ff"
+version = "1.0.0"
+description = "FlashForth upload tool for AVR microcontrollers"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.0",
+    "pyserial>=3.5",
+]
+
+[project.scripts]
+fu = "fu:fu"
+
+[tool.setuptools]
+py-modules = ["fu"]

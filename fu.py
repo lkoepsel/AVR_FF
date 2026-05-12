@@ -13,7 +13,8 @@ import time
 import click
 import serial
 import serial.tools.list_ports
-from lk_cli.utils import get_version
+
+__version__ = "1.0.0"
 
 FORTH_PORT = "/dev/ttyUSB0"
 FORTH_BAUD = 250000
@@ -118,7 +119,7 @@ def _detect_port() -> str | None:
 
 
 @click.command()
-@click.version_option(get_version(), prog_name="fu")
+@click.version_option(__version__, prog_name="fu")
 @click.argument("file", type=click.Path(exists=True, dir_okay=False))
 @click.option(
     "--port",
