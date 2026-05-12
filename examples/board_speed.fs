@@ -1,5 +1,7 @@
-\ Testing execution speed with round-robin tasking
 \ Requires 328P_ports and asm
+\ Testing execution speed with round-robin tasking
+\ tasks - task period 9.26us
+\ inlined - task period 2.25us
 
 \ 1. Setup pins as output
 : setup
@@ -14,29 +16,29 @@
 ;
 
 \ 2. Define 8 tasks, each to toggle a specific pin
-: task0 [ pind-io #2 sbi, ] ; 
-: task1 [ pind-io #3 sbi, ] ; 
-: task2 [ pind-io #4 sbi, ] ; 
-: task3 [ pind-io #5 sbi, ] ; 
-: task4 [ pind-io #6 sbi, ] ; 
-: task5 [ pind-io #7 sbi, ] ; 
-: task6 [ pinb-io #0 sbi, ] ; 
-: task7 [ pinb-io #1 sbi, ] ; 
+: task0 [ pind-io #0 sbi, ] ;
+: task1 [ pind-io #1 sbi, ] ;
+: task2 [ pind-io #2 sbi, ] ;
+: task3 [ pind-io #3 sbi, ] ;
+: task4 [ pind-io #4 sbi, ] ;
+: task5 [ pind-io #5 sbi, ] ;
+: task6 [ pinb-io #6 sbi, ] ;
+: task7 [ pinb-io #7 sbi, ] ;
 
 \ inlined for maximum performance
-: task0_i [ pind-io #2 sbi, ] ; inlined
-: task1_i [ pind-io #3 sbi, ] ; inlined
-: task2_i [ pind-io #4 sbi, ] ; inlined
-: task3_i [ pind-io #5 sbi, ] ; inlined
-: task4_i [ pind-io #6 sbi, ] ; inlined
-: task5_i [ pind-io #7 sbi, ] ; inlined
-: task6_i [ pinb-io #0 sbi, ] ; inlined
-: task7_i [ pinb-io #1 sbi, ] ; inlined
+: task0_i [ pind-io #0 sbi, ] ; inlined
+: task1_i [ pind-io #1 sbi, ] ; inlined
+: task2_i [ pind-io #2 sbi, ] ; inlined
+: task3_i [ pind-io #3 sbi, ] ; inlined
+: task4_i [ pind-io #4 sbi, ] ; inlined
+: task5_i [ pind-io #5 sbi, ] ; inlined
+: task6_i [ pinb-io #6 sbi, ] ; inlined
+: task7_i [ pinb-io #7 sbi, ] ; inlined
 
 \ 3. Cycle through each task
 
-: alltasks 
-    setup 
+: alltasks
+    setup
         begin
             task0
             task1
@@ -51,7 +53,7 @@
 
 \ inlined for maximum performance
 : alltasks_i
-    setup 
+    setup
         begin
             task0_i
             task1_i
@@ -64,10 +66,9 @@
         again
 ;
 
-: onetask 
-    setup 
+: onetask
+    setup
         begin
             task6
         again
 ;
-

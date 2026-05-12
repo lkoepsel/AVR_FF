@@ -1,36 +1,37 @@
+\ requires Library/328P_ports
 \ blink built-in LED, requires reset to stop
-: blink ( ms -- ) 
-    LED out 
-    begin 
+: blink ( ms -- )
+    LED out
+    begin
         LED tog
-        dup ms 
+        dup ms
     again
 ;
 
 \ blink? built-in LED, quit on key press
-: blink? ( ms -- ) 
+: blink? ( ms -- )
     LED out
-    begin 
+    begin
         LED tog
-        dup ms 
+        dup ms
         key?
     until
     drop
 ;
 
 \ blink a pin (pin as in Dnn), requires reset to stop
-: plink ( ms pin -- ) 
-    2dup out 
-    begin 
+: plink ( ms pin -- )
+    2dup out
+    begin
         2dup tog
         rot dup ms rot rot
     again
 ;
 
 \ blink a pin (pin as in Dnn), quit on key press
-: plink? ( ms pin -- ) 
-    2dup out 
-    begin 
+: plink? ( ms pin -- )
+    2dup out
+    begin
         2dup tog
         rot dup ms rot rot
         key?

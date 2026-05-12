@@ -21,6 +21,7 @@ hex ram
   r> >in ! r> r> 'source 2!
 ;
 
+\ same as -marker, removes everything after word
 : forget ( --- name )
   bl word latest @ (f) ?abort?
   c>n 2- dup @ ?abort?
@@ -42,14 +43,14 @@ hex ram
 \ nfa -- flag
 : in? c@ $40 and ;
 
-\ addr -- addr+1 n 
+\ addr -- addr+1 n
 : count c@+ ;
 
 : .mem_left ( --- )
     cr ."  flash: "   flash  unused u.
     cr ." eeprom: "   eeprom unused u.
-    cr ."    ram: "   ram    unused u. 
-    cr 
+    cr ."    ram: "   ram    unused u.
+    cr
 ;
 
 

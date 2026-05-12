@@ -1,19 +1,20 @@
+\ Requires Library/328P_ports
 \ Testing execution speed with round-robin tasking
 \ See https://wellys.com/posts/board-language_speed/
-\ tasks execute @ 26.512kHz, every 37.72us
+\ tasks execute @ 26.512kHz, every 37.7us
 -tasks
 marker -tasks
 
-\ 1. Setup pins as output
+\ 1. Setup pins as out
 : setup
-	D2 output
-	D3 output
-	D4 output
-	D5 output
-	D6 output
-	D7 output
-	D8 output
-	D9 output
+	D2 out
+	D3 out
+	D4 out
+	D5 out
+	D6 out
+	D7 out
+	D8 out
+	D9 out
 ;
 
 \ 2. Define 8 tasks, each to toggle a specific pin
@@ -28,8 +29,8 @@ marker -tasks
 
 \ 3. Cycle through each task
 
-: alltasks 
-	setup 
+: alltasks
+	setup
 		begin
 			task0
 			task1

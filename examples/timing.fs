@@ -2,13 +2,13 @@
 \ loop with no delay, for baseline
 marker -timing \ test fastest loop through code
 : time_0 ( -- ) \ 4.63us/loop or a period of 9.27us or 107.9kHz
-	D3 output
+	D3 out
 	begin
-		D3 toggle
+		D3 tog
 	again
 ;
 
-\ looping using a millisecond (ms) delay, 
+\ looping using a millisecond (ms) delay,
 \ adds 1ms, subtract 1 for a specific delay so 0ms is a 1ms loop, 1ms for 2ms
 \ 0 ms: 1.00ms/high, 2.00ms/period
 \ 1 ms: 2.00ms/high, 4.00ms/period
@@ -17,9 +17,9 @@ marker -timing \ test fastest loop through code
 \ 5 ms: 6.01ms/high, 12.01ms/period
 
 : time_ms ( n -- ) \ delay for n ms
-	D3 output
+	D3 out
 	begin
-		D3 toggle
+		D3 tog
 		dup ms
 	again
 ;
@@ -30,10 +30,10 @@ marker -timing \ test fastest loop through code
 \  3 us:  8.52us/high, 17.04 us/period => 5.52us
 \ 10 us: 15.54us/high, 31.07 us/period 5.52us
 \ 20 us: 25.57us/high, 51.38us/period => 5.57us
-: time_us ( -- ) \ 
-	D3 output
+: time_us ( -- ) \
+	D3 out
 	begin
-		D3 toggle
+		D3 tog
 		dup us
 	again
 ;
