@@ -22,33 +22,44 @@ There is no build/compile step on the host. Workflow:
 
 ## fu.py — Forth Upload Tool
 
-`fu.py` uploads `.fs` files to the board over serial. It skips blank lines and whole-line `\` comments, strips trailing inline comments before sending, and uses a depth-tracking strategy: lines inside a colon definition are paced with a configurable delay; lines at interpreter level wait for the `ok` prompt.
+`fu.py` is self-contained in this repo. It requires `click` and `pyserial`; `pyproject.toml` declares both. Install once with `uv`, then use the `fu` command from anywhere:
+
+```bash
+# Install (run once from the repo root)
+uv tool install .
+
+# Reinstall after editing fu.py
+uv tool install --reinstall .
+```
+
+`fu` uploads `.fs` files to the board over serial. It skips blank lines and whole-line `\` comments, strips trailing inline comments before sending, and uses a depth-tracking strategy: lines inside a colon definition are paced with a configurable delay; lines at interpreter level wait for the `ok` prompt.
 
 ```bash
 # Basic upload (auto-detects USB serial port)
-python fu.py Library/328P_ports.fs
+fu Library/328P_ports.fs
 
 # Specify port and baud explicitly
-python fu.py --port /dev/ttyACM0 --baud 250000 blink.fs
+fu --port /dev/ttyACM0 --baud 250000 blink.fs
 
 # Preview exactly what will be sent (no serial connection opened)
-python fu.py --clean blink.fs
+fu --clean blink.fs
 
-# Verbose: print each line as it is sent
-python fu.py --verbose blink.fs
+# Verbose: print each line as it is sent with original line numbers
+fu --verbose blink.fs
 
 # Increase per-line delay inside definitions if upload errors occur
-python fu.py --delay 100 blink.fs
+fu --delay 100 blink.fs
 
 # Pipe mode for tio (press ctrl-t R inside tio, then run this)
-python fu.py --pipe blink.fs
+fu --pipe blink.fs
 ```
 
 **Key behaviours:**
 - Port auto-detection scans for `ttyUSB*`, `ttyACM*`, `usbserial`, `usbmodem`, `COM*`; falls back to `/dev/ttyUSB0`
 - Context-switching words (`empty`, `flash`, `ram`, `eeprom`) are sent individually and confirmed by their exact echo response before upload continues — `empty` gets a 10-second timeout since it erases all user flash
+- Lines starting with `-` (marker deletions like `-end_ports`) are non-fatal on first upload — a `?` response means the marker didn't exist yet, which is expected
 - Errors report the **original file line number** (not the stripped-line count) so the location matches the editor
-- FlashForth error responses (`?` + NAK byte `\x15`, `DEFINED`, `COMPILE ONLY`) all cause an immediate abort with the offending line printed
+- FlashForth error responses (`?` + NAK byte `\x15`, `DEFINED`, `COMPILE ONLY`) abort the upload; stats are always printed even on error
 
 ## Repository Structure
 
@@ -83,6 +94,7 @@ examples/    Standalone example programs
   timing.fs        Blocking delay timing loops
 
 fu.py              Forth upload tool (primary way to send .fs files to the board)
+pyproject.toml     Package definition for fu.py (declares click + pyserial deps)
 m328Pdef.inc       ATmega328P register/constant definitions (reference)
 wordsAll.txt       Complete FlashForth word list (reference)
 ```
