@@ -147,6 +147,19 @@ The **forth** folder is a collection of forth files which are part of FlashFort 
 * *buttons* - demonstrates how to use button de-bouncing found in the *HAL* (*328P_ports.fs*) and *buttons.fs* [more](https://wellys.com/posts/flashforth_debounce/)
 * *table* - table lookup example
 
+
+## Tools
+### Proto Board Connector Left to Right
+
+| Socket  | Description | 
+| ------: | :----------: 
+| 1       | GND        | 
+| 2       | Pot Middle |  
+| 3       | Blue       |  
+| 4       | Green      |  
+| 5       | R Button   |  
+| 6       | L Button   | 
+
 ## Sources
 I also write about C, MicroPython and *Forth* programming on microcontrollers at [Wellys](https://wellys.com).
 

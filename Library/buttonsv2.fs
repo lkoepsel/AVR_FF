@@ -26,7 +26,7 @@ $11 constant T0_OVF_VEC
 %1111.1100.0001.1111 constant BTN_MASK
 %0000.0000.0001.1111 constant BTN_DOWN
 
-2   constant button_count \ number of buttons    
+2   constant button_count \ number of buttons
 D5  2constant right
 D6  2constant left
 ram
@@ -34,31 +34,31 @@ variable rt_history
 variable rt_pressed
 variable rt_times
 
-: rt_init 
+: rt_init
     $ffff rt_history !
     0 rt_pressed !
     0 rt_times !
-    right pullup
+    right pull
 ;
 
 \ Begin the button check code
 
 \ read input register PIND
 : pind@ ( -- c )
-  \ Make room in the stack top registers. 
+  \ Make room in the stack top registers.
   \ Or just use DUP, it inlines the same code automatically.
   [ R25 -Y st,  ]
   [ R24 -Y st,  ]
   [ R24 $9 inn, ]  \ put the low byte on the stack
   [ R25 clr,    ]  \ clear the high byte
-; 
+;
 
 \ in_D5, test reading pin D5
 : in_D5 ( -- f ) pind@ BIT5 and ;
 
 \ rt_state? determines if right button is down, (in pullup mode, so 0 is true)
 : rt_state? ( -- f ) \ return True if button down
-    in_D5 if 0 else 1 then 
+    in_D5 if 0 else 1 then
 ;
 
 \ rt_store_state - stores the right button state in history
@@ -68,9 +68,9 @@ variable rt_times
 
 \ down? determines if the down pattern counts as a press, returns true if so
 : rt_down? ( -- f )
-    rt_history @ 
-    BTN_MASK and 
-    BTN_DOWN = 
+    rt_history @
+    BTN_MASK and
+    BTN_DOWN =
 ;
 
 \  set_pressed uses down? to determined if pressed, if so, sets array pressed
@@ -145,8 +145,8 @@ marker -end_debounce
 \ main application loop, continues to check for button presses
 : btn_count ( -- )
     begin
-        rt_pressed @ 
-        if 
+        rt_pressed @
+        if
             rt_btn_pressed
         then
     again
@@ -155,7 +155,7 @@ marker -end_debounce
 \ application: count_buttons - initialize then count button presses
 : count_buttons
     init_dbnce_clk
-    rt_init 
+    rt_init
     cr btn_count
 ;
 
@@ -189,4 +189,3 @@ marker -end_debounce
 
 marker -end_buttons
 \ ' buttons is turnkey
-
