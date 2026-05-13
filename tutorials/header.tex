@@ -1,0 +1,17 @@
+% Pandoc emits \begin{longtable}, but longtable refuses to work in
+% \twocolumn mode. Redefine it to a plain tabular, neutralise the
+% longtable-only row-marker commands, and replace booktabs rules with
+% plain \hline so the tables compile inside a single column.
+\renewenvironment{longtable}[2][]{\begin{tabular}{#2}}{\end{tabular}}
+\global\let\endhead\relax
+\global\let\endfoot\relax
+\global\let\endfirsthead\relax
+\global\let\endlastfoot\relax
+% Drop the booktabs rules AND the trailing \noalign{} that pandoc
+% emits after each one - both are invalid before/after the first/last
+% row of a plain tabular. Delimited \def consumes the entire
+% "\rule\noalign{...}" pair as a single empty expansion.
+\def\toprule\noalign#1{}
+\def\midrule\noalign#1{}
+\def\bottomrule\noalign#1{}
+\let\addlinespace\relax

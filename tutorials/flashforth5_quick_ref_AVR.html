@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FlashForth 5 Quick Reference for AVR</title>
+<style>
+  @page { size: letter; margin: 0.4in 0.5in; }
+
+  html { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  body {
+    font-size: 8pt;
+    line-height: 1.18;
+    margin: 0;
+    color: #111;
+  }
+
+  /* Multi-column layout on a child container, not body itself,
+     so print pagination breaks cleanly across pages. */
+  .cols {
+    -webkit-column-count: 2;
+    -moz-column-count: 2;
+    column-count: 2;
+    -webkit-column-gap: 0.3in;
+    -moz-column-gap: 0.3in;
+    column-gap: 0.3in;
+    -webkit-column-rule: 0.5px solid #bbb;
+    -moz-column-rule: 0.5px solid #bbb;
+    column-rule: 0.5px solid #bbb;
+  }
+
+  h1 {
+    font-size: 13pt;
+    margin: 0 0 4px 0;
+    border-bottom: 1px solid #444;
+    padding-bottom: 2px;
+  }
+  h2 {
+    font-size: 10pt;
+    margin: 6px 0 2px 0;
+    background: #eee;
+    padding: 1px 3px;
+    break-after: avoid-column;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 9pt;
+    margin: 4px 0 1px 0;
+    font-style: italic;
+    break-after: avoid-column;
+    page-break-after: avoid;
+  }
+  p {
+    margin: 1px 0 3px 0;
+    orphans: 3;
+    widows: 3;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.5pt;
+    margin-bottom: 3px;
+  }
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  td {
+    padding: 0.5px 3px;
+    vertical-align: top;
+    border-bottom: 0.25px solid #ddd;
+    break-inside: avoid;
+  }
+  td.w { width: 28%; font-family: "Menlo", Consolas, monospace; white-space: nowrap; }
+  code, pre { font-family: "Menlo", Consolas, monospace; font-size: 7.5pt; }
+  pre {
+    background: #f4f4f4;
+    padding: 2px 4px;
+    margin: 2px 0 3px 0;
+    white-space: pre-wrap;
+    line-height: 1.1;
+    break-inside: avoid;
+  }
+  .stack { color: #555; font-style: italic; }
+  ul { margin: 1px 0 3px 14px; padding: 0; }
+  li { margin: 0; }
+
+  /* Screen preview: simulate a single letter-sized page so the
+     reader sees roughly what each printed sheet will look like.
+     When printing, this is overridden by @media print below. */
+  @media screen {
+    html { background: #ddd; }
+    body {
+      width: 7.5in;
+      margin: 16px auto;
+      padding: 0.4in 0.5in;
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+  }
+
+  @media print {
+    html, body {
+      background: white;
+      box-shadow: none;
+    }
+    body {
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+    }
+    .cols {
+      -webkit-column-count: 2 !important;
+      -moz-column-count: 2 !important;
+      column-count: 2 !important;
+      -webkit-column-gap: 0.3in !important;
+      -moz-column-gap: 0.3in !important;
+      column-gap: 0.3in !important;
+      -webkit-column-rule: 0.5px solid #bbb !important;
+      -moz-column-rule: 0.5px solid #bbb !important;
+      column-rule: 0.5px solid #bbb !important;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>FlashForth 5 Quick Reference for AVR Microcontrollers</h1>
+<div class="cols">
+
+<h2>Interpreter</h2>
+<p>The outer interpreter looks for words and numbers delimited by whitespace. Numbers are pushed onto the stack; words are looked up and acted upon. Names are limited to 15 characters. Some words are compile-time only.</p>
+
+<h2>Data and the stack</h2>
+<p>The data stack (S:) holds 16-bit cells. Functions get arguments from the stack and leave results there. A return stack (R:) is available for temporary storage.</p>
+
+<h2>Notation</h2>
+<table>
+<tr><td class="w">n, n1, n2, n3</td><td>Single-cell integers (16-bit).</td></tr>
+<tr><td class="w">u, u1, u2</td><td>Unsigned integers (16-bit).</td></tr>
+<tr><td class="w">x, x1, x2, x3</td><td>Single-cell item (16-bit).</td></tr>
+<tr><td class="w">c</td><td>Character value (8-bit).</td></tr>
+<tr><td class="w">d ud</td><td>Double-cell signed/unsigned (32-bit).</td></tr>
+<tr><td class="w">t ut</td><td>Triple-cell signed/unsigned (48-bit).</td></tr>
+<tr><td class="w">q uq</td><td>Quad-cell signed/unsigned (64-bit).</td></tr>
+<tr><td class="w">f</td><td>Boolean flag: 0 false, -1 true.</td></tr>
+<tr><td class="w">addr, addr1, addr2</td><td>16-bit addresses.</td></tr>
+<tr><td class="w">a-addr</td><td>Cell-aligned address.</td></tr>
+<tr><td class="w">c-addr</td><td>Character or byte address.</td></tr>
+<tr><td class="w">addr.d</td><td>32-bit address.</td></tr>
+</table>
+
+<h2>Numbers and values</h2>
+<table>
+<tr><td class="w">2</td><td>Push integer two. <span class="stack">( -- 2 )</span></td></tr>
+<tr><td class="w">#255</td><td>Push decimal 255. <span class="stack">( -- 255 )</span></td></tr>
+<tr><td class="w">%11</td><td>Push binary 11 = 3. <span class="stack">( -- 3 )</span></td></tr>
+<tr><td class="w">$10</td><td>Push hex 10 = 16. <span class="stack">( -- 16 )</span></td></tr>
+<tr><td class="w">23.</td><td>Push double number. <span class="stack">( -- 23 0 )</span></td></tr>
+<tr><td class="w">decimal</td><td>Set number base 10.</td></tr>
+<tr><td class="w">hex</td><td>Set base hexadecimal.</td></tr>
+<tr><td class="w">bin</td><td>Set base binary.</td></tr>
+<tr><td class="w">s&gt;d</td><td>Sign extend single to double. <span class="stack">( n -- d )</span> Drop top cell to recover single if value fits.</td></tr>
+</table>
+
+<h2>Displaying data</h2>
+<table>
+<tr><td class="w">.</td><td>Display a number. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w">u.</td><td>Display u unsigned. <span class="stack">( u -- )</span></td></tr>
+<tr><td class="w">u.r</td><td>Display u in field width n, 0&lt;n&lt;256. <span class="stack">( u n -- )</span></td></tr>
+<tr><td class="w">d.</td><td>Display double number. <span class="stack">( d -- )</span></td></tr>
+<tr><td class="w">ud.</td><td>Display unsigned double. <span class="stack">( ud -- )</span></td></tr>
+<tr><td class="w">.s</td><td>Display stack (nondestructive).</td></tr>
+<tr><td class="w">.st</td><td>Emit status: base, current data section, stack.</td></tr>
+<tr><td class="w">dump</td><td>Display memory. <span class="stack">( addr u -- )</span></td></tr>
+</table>
+
+<h2>Stack manipulation</h2>
+<table>
+<tr><td class="w">dup</td><td>Duplicate top. <span class="stack">( x -- x x )</span></td></tr>
+<tr><td class="w">?dup</td><td>Duplicate if nonzero. <span class="stack">( x -- 0 | x x )</span></td></tr>
+<tr><td class="w">swap</td><td>Swap top two. <span class="stack">( x1 x2 -- x2 x1 )</span></td></tr>
+<tr><td class="w">over</td><td>Copy 2nd to top. <span class="stack">( x1 x2 -- x1 x2 x1 )</span></td></tr>
+<tr><td class="w">drop</td><td>Discard top. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">nip</td><td>Remove x1. <span class="stack">( x1 x2 -- x2 )</span></td></tr>
+<tr><td class="w">rot</td><td>Rotate top three. <span class="stack">( x1 x2 x3 -- x2 x3 x1 )</span></td></tr>
+<tr><td class="w">tuck</td><td>Insert x2 below x1. <span class="stack">( x1 x2 -- x2 x1 x2 )</span></td></tr>
+<tr><td class="w">pick</td><td>Duplicate u-th item. <span class="stack">( xu...x0 u -- xu...x0 xu )</span></td></tr>
+<tr><td class="w">2dup</td><td>Duplicate double-cell. <span class="stack">( d -- d d )</span></td></tr>
+<tr><td class="w">2swap</td><td>Swap top two doubles. <span class="stack">( d1 d2 -- d2 d1 )</span></td></tr>
+<tr><td class="w">2over</td><td>Copy 2nd double to top. <span class="stack">( d1 d2 -- d1 d2 d1 )</span></td></tr>
+<tr><td class="w">2drop</td><td>Discard top double. <span class="stack">( d -- )</span></td></tr>
+<tr><td class="w">&gt;r</td><td>To return stack. <span class="stack">S:( n -- ) R:( -- n )</span></td></tr>
+<tr><td class="w">r&gt;</td><td>From return stack. <span class="stack">S:( -- n ) R:( n -- )</span></td></tr>
+<tr><td class="w">r@</td><td>Copy top of R. <span class="stack">S:( -- n ) R:( n -- n )</span></td></tr>
+<tr><td class="w">rdrop</td><td>Discard top of R. <span class="stack">R:( n -- )</span></td></tr>
+<tr><td class="w">sp@</td><td>Data stack pointer. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">sp!</td><td>Set data stack pointer. <span class="stack">( addr -- )</span></td></tr>
+</table>
+
+<h2>Operators</h2>
+<h3>Arithmetic with single-cell numbers</h3>
+<p>Some require <code>core.txt</code> and <code>math.txt</code>.</p>
+<table>
+<tr><td class="w">+</td><td>Add. <span class="stack">( n1 n2 -- n1+n2 )</span></td></tr>
+<tr><td class="w">-</td><td>Subtract. <span class="stack">( n1 n2 -- n1-n2 )</span></td></tr>
+<tr><td class="w">*</td><td>Multiply. <span class="stack">( n1 n2 -- n1*n2 )</span></td></tr>
+<tr><td class="w">/</td><td>Divide. <span class="stack">( n1 n2 -- n1/n2 )</span></td></tr>
+<tr><td class="w">mod</td><td>Remainder. <span class="stack">( n1 n2 -- n.rem )</span></td></tr>
+<tr><td class="w">/mod</td><td>Divide. <span class="stack">( n1 n2 -- n.rem n.quot )</span></td></tr>
+<tr><td class="w">u/</td><td>Unsigned 16/16→16 div. <span class="stack">( u1 u2 -- u2/u1 )</span></td></tr>
+<tr><td class="w">u/mod</td><td>Unsigned 16/16→16. <span class="stack">( u1 u2 -- u.rem u.quot )</span></td></tr>
+<tr><td class="w">1</td><td>Push one. <span class="stack">( -- 1 )</span></td></tr>
+<tr><td class="w">1+</td><td>Add one. <span class="stack">( n -- n1 )</span></td></tr>
+<tr><td class="w">1-</td><td>Subtract one. <span class="stack">( n -- n1 )</span></td></tr>
+<tr><td class="w">2+</td><td>Add two. <span class="stack">( n -- n1 )</span></td></tr>
+<tr><td class="w">2-</td><td>Subtract two. <span class="stack">( n -- n1 )</span></td></tr>
+<tr><td class="w">2*</td><td>Multiply by 2 (shift left). <span class="stack">( u -- u1 )</span></td></tr>
+<tr><td class="w">2/</td><td>Divide by 2 (shift right). <span class="stack">( u -- u1 )</span></td></tr>
+<tr><td class="w">*/</td><td>Scale n1*n2/n3 (32-bit intermediate). <span class="stack">( n1 n2 n3 -- )</span></td></tr>
+<tr><td class="w">*/mod</td><td>Scale with remainder. <span class="stack">( n1 n2 n3 -- n.rem n.quot )</span></td></tr>
+<tr><td class="w">u+/mod</td><td>Unsigned scale u1*u2/u3. <span class="stack">( u1 u2 u3 -- u.rem u.quot )</span></td></tr>
+<tr><td class="w">abs</td><td>Absolute value. <span class="stack">( n -- u )</span></td></tr>
+<tr><td class="w">negate</td><td>Negate. <span class="stack">( n -- -n )</span></td></tr>
+<tr><td class="w">?negate</td><td>Negate n1 if n2 negative. <span class="stack">( n1 n2 -- n3 )</span></td></tr>
+<tr><td class="w">min</td><td>Minimum. <span class="stack">( n1 n2 -- n )</span></td></tr>
+<tr><td class="w">max</td><td>Maximum. <span class="stack">( n1 n2 -- n )</span></td></tr>
+<tr><td class="w">umin</td><td>Unsigned minimum. <span class="stack">( u1 u2 -- u )</span></td></tr>
+<tr><td class="w">umax</td><td>Unsigned maximum. <span class="stack">( u1 u2 -- u )</span></td></tr>
+</table>
+
+<h3>Arithmetic with double-cell numbers</h3>
+<p>Some require <code>core.txt</code>, <code>math.txt</code>, <code>qmath.txt</code>.</p>
+<table>
+<tr><td class="w">d+</td><td>Add doubles. <span class="stack">( d1 d2 -- d1+d2 )</span></td></tr>
+<tr><td class="w">d-</td><td>Subtract doubles. <span class="stack">( d1 d2 -- d1-d2 )</span></td></tr>
+<tr><td class="w">m+</td><td>Add single to double. <span class="stack">( d n -- d2 )</span></td></tr>
+<tr><td class="w">m*</td><td>Signed 16*16→32 multiply. <span class="stack">( n n -- d )</span></td></tr>
+<tr><td class="w">2*</td><td>Multiply by 2. <span class="stack">( d -- d )</span></td></tr>
+<tr><td class="w">d2/</td><td>Divide by 2. <span class="stack">( d -- d )</span></td></tr>
+<tr><td class="w">um*</td><td>Unsigned 16x16→32 mult. <span class="stack">( u1 u2 -- ud )</span></td></tr>
+<tr><td class="w">ud*</td><td>Unsigned 32x16→32 mult. <span class="stack">( ud u -- ud )</span></td></tr>
+<tr><td class="w">um/mod</td><td>Unsigned 32/16→16 div. <span class="stack">( ud u1 -- u.rem u.quot )</span></td></tr>
+<tr><td class="w">ud/mod</td><td>Unsigned 32/16→32 div. <span class="stack">( ud u1 -- u.rem ud.quot )</span></td></tr>
+<tr><td class="w">fm/mod</td><td>Floored division. <span class="stack">( d n -- n.rem n.quot )</span></td></tr>
+<tr><td class="w">sm/rem</td><td>Symmetric div 32/16→16. <span class="stack">( d n -- n.rem n.quot )</span></td></tr>
+<tr><td class="w">m*/</td><td>d2=d1*n1/n2 triple intermediate. <span class="stack">( d1 n1 n2 -- d2 )</span></td></tr>
+<tr><td class="w">um*/</td><td>ud2=ud1*u1/u2 triple intermediate. <span class="stack">( ud1 u1 u2 -- ud2 )</span></td></tr>
+<tr><td class="w">dabs</td><td>Absolute. <span class="stack">( d -- ud )</span></td></tr>
+<tr><td class="w">dnegate</td><td>Negate. <span class="stack">( d -- -d )</span></td></tr>
+<tr><td class="w">?dnegate</td><td>Negate d if n negative. <span class="stack">( d n -- -d )</span></td></tr>
+</table>
+
+<h2>Relational</h2>
+<table>
+<tr><td class="w">=</td><td>True if equal. <span class="stack">( x1 x2 -- f )</span></td></tr>
+<tr><td class="w">&lt;&gt;</td><td>True if not equal. <span class="stack">( x1 x2 -- f )</span></td></tr>
+<tr><td class="w">&lt;</td><td>True if n1&lt;n2. <span class="stack">( n1 n2 -- f )</span></td></tr>
+<tr><td class="w">&gt;</td><td>True if n1&gt;n2. <span class="stack">( n1 n2 -- f )</span></td></tr>
+<tr><td class="w">0=</td><td>True if zero (inverts logical). <span class="stack">( n -- f )</span></td></tr>
+<tr><td class="w">0&lt;</td><td>True if negative. <span class="stack">( n -- f )</span></td></tr>
+<tr><td class="w">within</td><td>True if xl≤x&lt;xh. <span class="stack">( x xl xh -- f )</span></td></tr>
+<tr><td class="w">u&lt;</td><td>True if u1&lt;u2. <span class="stack">( u1 u2 -- f )</span></td></tr>
+<tr><td class="w">u&gt;</td><td>True if u1&gt;u2. <span class="stack">( u1 u2 -- f )</span></td></tr>
+<tr><td class="w">d=</td><td>True if d1=d2. <span class="stack">( d1 d2 -- f )</span></td></tr>
+<tr><td class="w">d0&lt;</td><td>True if d negative. <span class="stack">( d -- f )</span></td></tr>
+<tr><td class="w">d&lt;</td><td>True if d1&lt;d2. <span class="stack">( d1 d2 -- f )</span></td></tr>
+<tr><td class="w">d&gt;</td><td>True if d1&gt;d2. <span class="stack">( d1 d2 -- f )</span></td></tr>
+</table>
+
+<h2>Bitwise</h2>
+<table>
+<tr><td class="w">invert</td><td>Ones complement. <span class="stack">( x -- x )</span></td></tr>
+<tr><td class="w">dinvert</td><td>Invert double. <span class="stack">( du -- du )</span></td></tr>
+<tr><td class="w">and</td><td>Bitwise AND. <span class="stack">( x1 x2 -- x )</span></td></tr>
+<tr><td class="w">or</td><td>Bitwise OR. <span class="stack">( x1 x2 -- x )</span></td></tr>
+<tr><td class="w">xor</td><td>Bitwise XOR. <span class="stack">( x -- x )</span></td></tr>
+<tr><td class="w">lshift</td><td>Left shift by u bits. <span class="stack">( x1 u -- x2 )</span></td></tr>
+<tr><td class="w">rshift</td><td>Right shift by u bits. <span class="stack">( x1 u -- x2 )</span></td></tr>
+</table>
+
+<h2>Memory</h2>
+<p>Microcontroller has three memory contexts (Flash, EEPROM, SRAM) unified into a single 64kB address space.</p>
+<h3>AVR8 Memory map</h3>
+<table>
+<tr><td class="w">$0000 – (RAMSIZE-1)</td><td>SRAM</td></tr>
+<tr><td class="w">RAMSIZE – (RAMSIZE+EEPROMSIZE-1)</td><td>EEPROM</td></tr>
+<tr><td class="w">($ffff-FLASHSIZE+1) – $ffff</td><td>Flash</td></tr>
+</table>
+<p>SRAM includes IO-space and SFRs. Flash high mark is set by boot area + FF kernel size.</p>
+
+<h3>Memory context</h3>
+<table>
+<tr><td class="w">ram</td><td>Set context to SRAM.</td></tr>
+<tr><td class="w">eeprom</td><td>Set context to EEPROM.</td></tr>
+<tr><td class="w">flash</td><td>Set context to Flash.</td></tr>
+<tr><td class="w">fl-</td><td>Disable writes to Flash, EEPROM.</td></tr>
+<tr><td class="w">fl+</td><td>Enable writes (default).</td></tr>
+<tr><td class="w">iflush</td><td>Flush flash write buffer.</td></tr>
+<tr><td class="w">here</td><td>Current data section dictionary pointer. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">align</td><td>Align dictionary pointer to cell boundary.</td></tr>
+<tr><td class="w">hi</td><td>High limit of current data space. <span class="stack">( -- u )</span></td></tr>
+</table>
+
+<h3>Accessing memory</h3>
+<table>
+<tr><td class="w">!</td><td>Store x to address. <span class="stack">( x a-addr -- )</span></td></tr>
+<tr><td class="w">@</td><td>Fetch from address. <span class="stack">( a-addr -- x )</span></td></tr>
+<tr><td class="w">@+</td><td>Fetch cell, inc addr by cell. <span class="stack">( a-addr1 -- a-addr2 x )</span></td></tr>
+<tr><td class="w">2!</td><td>Store 2 cells. <span class="stack">( x1 x2 a-addr -- )</span></td></tr>
+<tr><td class="w">2@</td><td>Fetch 2 cells. <span class="stack">( a-addr -- x1 x2 )</span></td></tr>
+<tr><td class="w">c!</td><td>Store character. <span class="stack">( c addr -- )</span></td></tr>
+<tr><td class="w">c@</td><td>Fetch character. <span class="stack">( addr -- c )</span></td></tr>
+<tr><td class="w">c@+</td><td>Fetch char, inc addr. <span class="stack">( addr1 -- addr2 c )</span></td></tr>
+<tr><td class="w">+!</td><td>Add n to cell at addr. <span class="stack">( n addr -- )</span></td></tr>
+<tr><td class="w">-@</td><td>Fetch, dec addr by 2. <span class="stack">( addr1 -- addr2 x )</span></td></tr>
+<tr><td class="w">&gt;a</td><td>Write to A register. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">a&gt;</td><td>Read from A register. <span class="stack">( -- x )</span></td></tr>
+</table>
+
+<h3>Accessing extended (Flash) memory</h3>
+<table>
+<tr><td class="w">x!</td><td>Store to real flash addr. <span class="stack">( u addr.d -- )</span></td></tr>
+<tr><td class="w">x@</td><td>Fetch from real flash addr. <span class="stack">( addr.d -- u )</span></td></tr>
+</table>
+
+<h3>Accessing bits in RAM</h3>
+<table>
+<tr><td class="w">mset</td><td>Set bits in file register with mask c. <span class="stack">( c addr -- )</span></td></tr>
+<tr><td class="w">mclr</td><td>Clear bits with mask c. <span class="stack">( c addr -- )</span></td></tr>
+<tr><td class="w">mtst</td><td>AND file register byte with mask c. <span class="stack">( c addr -- x )</span></td></tr>
+</table>
+<p>From <code>bit.txt</code>:</p>
+<table>
+<tr><td class="w">bit1: <i>name</i></td><td>Define word to set a bit. <span class="stack">( addr bit -- )</span></td></tr>
+<tr><td class="w">bit0: <i>name</i></td><td>Define word to clear a bit. <span class="stack">( addr bit -- )</span></td></tr>
+<tr><td class="w">bit?: <i>name</i></td><td>Define word to test a bit. Leaves flag. <span class="stack">( addr bit -- )</span></td></tr>
+</table>
+
+<h2>The Dictionary</h2>
+<h3>Dictionary management</h3>
+<table>
+<tr><td class="w">marker <i>-my-mark</i></td><td>Mark dictionary and memory state.</td></tr>
+<tr><td class="w">-my-mark</td><td>Return to state before marker.</td></tr>
+<tr><td class="w">find <i>name</i></td><td>Find name. 1 immediate, -1 normal, 0 not found. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">forget <i>name</i></td><td>Forget entries back to name.</td></tr>
+<tr><td class="w">empty</td><td>Reset all dictionary/memory pointers.</td></tr>
+<tr><td class="w">words</td><td>List all words.</td></tr>
+<tr><td class="w">words <i>xxx</i></td><td>List words containing xxx.</td></tr>
+</table>
+
+<h3>Defining constants and variables</h3>
+<table>
+<tr><td class="w">constant <i>name</i></td><td>Define new constant. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w">2constant <i>name</i></td><td>Define double constant. <span class="stack">( x x -- )</span></td></tr>
+<tr><td class="w"><i>name</i></td><td>Leave value on stack. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">variable <i>varname</i></td><td>Define variable in current data section.</td></tr>
+<tr><td class="w">2variable <i>name</i></td><td>Define double variable.</td></tr>
+<tr><td class="w"><i>varname</i></td><td>Leave address on stack. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">value <i>valname</i></td><td>Define value. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w">to <i>valname</i></td><td>Assign new value. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w"><i>valname</i></td><td>Leave value on stack. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">user <i>name</i></td><td>Define user variable at offset +n. <span class="stack">( +n -- )</span></td></tr>
+</table>
+
+<h3>Examples</h3>
+<pre>ram
+3 value xx                  \ Define value in SRAM.
+variable yy                 \ Define variable in SRAM.
+6 yy !                      \ Store 6 in variable yy.
+eeprom 5 value zz ram       \ Define value in EEPROM.
+
+warm                        \ Warm restart clears SRAM data.
+4 to xx                     \ Sets new value.
+hi here - u.                \ Number of bytes free.</pre>
+
+<h2>Defining compound data objects</h2>
+<table>
+<tr><td class="w">create <i>name</i></td><td>Create word, store current data section pointer.</td></tr>
+<tr><td class="w">does&gt;</td><td>Define runtime action of created word.</td></tr>
+<tr><td class="w">allot</td><td>Advance dictionary pointer by u bytes. <span class="stack">( u -- )</span></td></tr>
+<tr><td class="w">,</td><td>Append x to current data section. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">c,</td><td>Append c. <span class="stack">( c -- )</span></td></tr>
+<tr><td class="w">,&quot; xxx&quot;</td><td>Append string at HERE.</td></tr>
+<tr><td class="w">i,</td><td>Append x to flash data section. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">ic,</td><td>Append c to flash. <span class="stack">( c -- )</span></td></tr>
+<tr><td class="w">cf,</td><td>Compile xt into flash dictionary. <span class="stack">( addr -- )</span></td></tr>
+<tr><td class="w">c&gt;n</td><td>Code field addr → name field addr. <span class="stack">( addr1 -- addr2 )</span></td></tr>
+<tr><td class="w">n&gt;c</td><td>Name field addr → code field addr. <span class="stack">( addr1 -- addr2 )</span></td></tr>
+<tr><td class="w">n&gt;l</td><td>nfa→lfa (not implemented; use <code>2-</code>).</td></tr>
+<tr><td class="w">&gt;body</td><td>Parameter field address. <span class="stack">( xt -- a-addr )</span></td></tr>
+<tr><td class="w">:noname</td><td>Define headerless code. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">&gt;xa</td><td>Flash virtual→real executable addr. <span class="stack">( a-addr1 -- a-addr2 )</span></td></tr>
+<tr><td class="w">xa&gt;</td><td>Real executable→Flash virtual addr.</td></tr>
+</table>
+
+<h3>Array examples</h3>
+<pre>ram
+create my-array 20 allot        \ ...of creating an array,
+my-array 20 $ff fill            \ ...filling it with 1s, and
+my-array 20 dump                \ ...displaying its content.
+
+create my-cell-array
+    100 , 340 , 5 ,             \ Initialised cell array.
+my-cell-array 2 cells + @       \ Should leave 5. ( -- x )
+
+create my-byte-array
+    18 c, 21 c, 255 c,          \ Initialised byte array.
+my-byte-array 2 chars + c@      \ Should leave 255. ( -- c )
+
+: mk-byte-array                 \ Defining word ( n -- )
+    create allot                \ ...to make byte array objects
+    does&gt; + ;                   \ ...as shown in FF user's guide.
+
+10 mk-byte-array my-bytes       \ Creates array object. ( n -- addr )
+10 18 my-bytes c!
+21 1 my-bytes c!
+255 2 my-bytes c!
+
+: mk-cell-array                 \ Defining word ( n -- )
+    create cells allot          \ ...to make cell array objects.
+    does&gt; swap cells + ;
+
+5 mk-cell-array my-cells        \ Creates array object. ( n -- addr )
+3000 0 my-cells !               \ Sets an element
+45000 1 my-cells !              \ ...and another.
+63000 2 my-cells !
+1 my-cells @ .                  \ Should print 45000</pre>
+
+<h2>Memory operations</h2>
+<p>Some from <code>core.txt</code>.</p>
+<table>
+<tr><td class="w">cmove</td><td>Move u bytes addr1→addr2 (low→high). <span class="stack">( addr1 addr2 u -- )</span></td></tr>
+<tr><td class="w">fill</td><td>Fill u bytes with c. <span class="stack">( addr u c -- )</span></td></tr>
+<tr><td class="w">erase</td><td>Fill u bytes with 0. <span class="stack">( addr u -- )</span></td></tr>
+<tr><td class="w">blanks</td><td>Fill u bytes with spaces. <span class="stack">( addr u -- )</span></td></tr>
+<tr><td class="w">cells</td><td>Convert cells to address units. <span class="stack">( u -- u )</span></td></tr>
+<tr><td class="w">chars</td><td>Convert chars to address units. <span class="stack">( u -- u )</span></td></tr>
+<tr><td class="w">char+</td><td>Add 1 to address. <span class="stack">( addr1 -- addr2 )</span></td></tr>
+<tr><td class="w">cell+</td><td>Add size of cell to addr. <span class="stack">( addr1 -- addr2 )</span></td></tr>
+<tr><td class="w">aligned</td><td>Align addr to cell boundary. <span class="stack">( addr -- a-addr )</span></td></tr>
+</table>
+
+<h2>Predefined constants</h2>
+<table>
+<tr><td class="w">cell</td><td>Size of cell in chars. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">true</td><td>Boolean true. <span class="stack">( -- -1 )</span></td></tr>
+<tr><td class="w">false</td><td>Boolean false. <span class="stack">( -- 0 )</span></td></tr>
+<tr><td class="w">bl</td><td>ASCII space. <span class="stack">( -- c )</span></td></tr>
+<tr><td class="w">Fcy</td><td>CPU instruction-cycle freq in kHz. <span class="stack">( -- u )</span></td></tr>
+<tr><td class="w">ti#</td><td>Size of terminal input buffer. <span class="stack">( -- u )</span></td></tr>
+</table>
+
+<h2>Predefined variables</h2>
+<table>
+<tr><td class="w">base</td><td>Number base. <span class="stack">( -- a-addr )</span></td></tr>
+<tr><td class="w">irq</td><td>Interrupt vector (SRAM). Disable user interrupts and clear enables before zeroing: <code>di false to irq ei</code></td></tr>
+<tr><td class="w">turnkey</td><td>Vector for user start-up word. EEPROM mirrored in SRAM.</td></tr>
+<tr><td class="w">prompt</td><td>Deferred vector for quit info. Default <code>.st</code>.</td></tr>
+<tr><td class="w">'emit</td><td>EMIT vector. Default rx1.</td></tr>
+<tr><td class="w">'key</td><td>KEY vector. Default rx1.</td></tr>
+<tr><td class="w">'key?</td><td>KEY? vector. Default rx1?.</td></tr>
+<tr><td class="w">'source</td><td>Current input source.</td></tr>
+<tr><td class="w">s0</td><td>Start of data stack.</td></tr>
+<tr><td class="w">r0</td><td>Bottom of return stack.</td></tr>
+<tr><td class="w">rcnt</td><td>Saved return stack cells.</td></tr>
+<tr><td class="w">tib</td><td>Address of terminal input buffer.</td></tr>
+<tr><td class="w">tiu</td><td>Terminal input buffer pointer.</td></tr>
+<tr><td class="w">&gt;in</td><td>Offset from tib to current parse area.</td></tr>
+<tr><td class="w">pad</td><td>Temporary string area. <code>: pad tib ti# + ;</code> Each task has its own pad with zero default size; <code>allot</code> separately per task.</td></tr>
+<tr><td class="w">dp</td><td>Current dictionary pointer. EEPROM variable mirrored in RAM.</td></tr>
+<tr><td class="w">hp</td><td>Hold pointer for numeric output.</td></tr>
+<tr><td class="w">up</td><td>User pointer.</td></tr>
+<tr><td class="w">latest</td><td>Address of latest defined word.</td></tr>
+</table>
+
+<h2>The Compiler</h2>
+<h3>Defining functions</h3>
+<table>
+<tr><td class="w">:</td><td>Begin colon definition.</td></tr>
+<tr><td class="w">;</td><td>End colon definition.</td></tr>
+<tr><td class="w">[</td><td>Enter interpreter state.</td></tr>
+<tr><td class="w">]</td><td>Enter compilation state.</td></tr>
+<tr><td class="w">state</td><td>Compilation state flag (only changed with <code>[</code> / <code>]</code>).</td></tr>
+<tr><td class="w">[i</td><td>Enter Forth interrupt context.</td></tr>
+<tr><td class="w">]i</td><td>Exit Forth interrupt context.</td></tr>
+<tr><td class="w">;i</td><td>End an interrupt word.</td></tr>
+<tr><td class="w">literal</td><td>Compile-time: compile stack value. Run-time: leave value. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">2literal</td><td>Compile double value. <span class="stack">( x x -- )</span></td></tr>
+<tr><td class="w">inline <i>name</i></td><td>Inline the following word.</td></tr>
+<tr><td class="w">inlined</td><td>Mark last compiled word as inlined.</td></tr>
+<tr><td class="w">immediate</td><td>Mark latest definition immediate.</td></tr>
+<tr><td class="w">immed?</td><td>Nonzero if addr contains immediate flag. <span class="stack">( addr -- f )</span></td></tr>
+<tr><td class="w">in?</td><td>Nonzero if nfa has inline bit set. <span class="stack">( nfa -- f )</span></td></tr>
+<tr><td class="w">postpone <i>name</i></td><td>Postpone action of immediate word.</td></tr>
+<tr><td class="w">see <i>name</i></td><td>Show definition (loads <code>see.txt</code>).</td></tr>
+</table>
+
+<h3>Comments</h3>
+<table>
+<tr><td class="w">( <i>text</i> )</td><td>Inline comment.</td></tr>
+<tr><td class="w">\ <i>text</i></td><td>Skip rest of line.</td></tr>
+</table>
+
+<h3>Example colon definition</h3>
+<pre>: square ( n -- n**2 )      \ Example with stack comment.
+    dup * ;                  \ ...body of definition.</pre>
+
+<h2>Flow control</h2>
+<h3>Structured flow control</h3>
+<table>
+<tr><td class="w">if <i>xxx</i> else <i>yyy</i> then</td><td>Conditional. <span class="stack">( f -- )</span></td></tr>
+<tr><td class="w">begin <i>xxx</i> again</td><td>Infinite loop.</td></tr>
+<tr><td class="w">begin <i>xxx cond</i> until</td><td>Loop until cond true.</td></tr>
+<tr><td class="w">begin <i>xxx cond</i> while <i>yyy</i> repeat</td><td>Loop while cond true (yyy skipped on last iteration).</td></tr>
+<tr><td class="w">for <i>xxx</i> next</td><td>Loop u times. <code>r@</code> = counter u-1…0. <span class="stack">( u -- )</span></td></tr>
+<tr><td class="w">endit</td><td>Zero loop counter to exit a <code>for</code> loop on next <code>next</code>.</td></tr>
+</table>
+<p>From <code>doloop.txt</code>, ANSI loops iterate <i>initial</i> up to but not including <i>limit</i>:</p>
+<pre>limit initial do words-to-repeat loop
+limit initial do words-to-repeat value +loop</pre>
+<table>
+<tr><td class="w">i</td><td>Current (innermost) loop index. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">j</td><td>Next-outer loop index. <span class="stack">( -- n )</span></td></tr>
+<tr><td class="w">leave</td><td>Leave do loop immediately.</td></tr>
+<tr><td class="w">?do</td><td>Skip loop body if arguments equal. <span class="stack">( limit initial -- )</span></td></tr>
+</table>
+
+<h3>Loop examples</h3>
+<pre>decimal
+: sumdo  0 100 0 do i + loop ;      \ sumdo leaves 4950
+: sumfor 0 100 for r@ + next ;      \ sumfor leaves 4950
+: print-twos 10 0 do i u. 2 +loop ;</pre>
+
+<h3>Case example</h3>
+<p>From <code>case.txt</code> (<code>case of endof default endcase</code>):</p>
+<pre>: testcase
+    4 for r@
+        case
+            0 of ." zero"    endof
+            1 of ." one"     endof
+            2 of ." two"     endof
+            default ." default" endof
+        endcase
+    next
+;</pre>
+
+<h3>Unstructured flow control</h3>
+<table>
+<tr><td class="w">exit</td><td>Exit a word. When exiting a for loop, drop counter with <code>rdrop</code>.</td></tr>
+<tr><td class="w">abort</td><td>Reset stack pointer, execute quit.</td></tr>
+<tr><td class="w">?abort</td><td>If flag false, print msg and abort. <span class="stack">( f addr u -- )</span></td></tr>
+<tr><td class="w">?abort?</td><td>If false, output <code>?</code> + last word + text xxx.</td></tr>
+<tr><td class="w">abort&quot; <i>xxx&quot;</i></td><td>If false, type last word + text xxx.</td></tr>
+<tr><td class="w">quit</td><td>Interpret from keyboard.</td></tr>
+<tr><td class="w">warm</td><td>Warm start. Reset reason: S=reset, E=external, W=watchdog, U=R-underflow, O=R-overflow, B=brownout, P=power-on, M=math, A=address. Clears irq vector.</td></tr>
+</table>
+
+<h2>Vectored execution (function pointers)</h2>
+<table>
+<tr><td class="w">' <i>name</i></td><td>Leave xt of name. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">['] <i>name</i></td><td>Compile-time xt lookup of name.</td></tr>
+<tr><td class="w">execute</td><td>Execute word at address. <span class="stack">( addr -- )</span></td></tr>
+<tr><td class="w">@ex</td><td>Fetch vector from addr and execute. <span class="stack">( addr -- )</span></td></tr>
+<tr><td class="w">defer <i>vec-name</i></td><td>Define deferred execution vector.</td></tr>
+<tr><td class="w">is <i>vec-name</i></td><td>Store xt in vec-name. <span class="stack">( addr -- )</span></td></tr>
+<tr><td class="w"><i>vec-name</i></td><td>Execute word whose xt is stored in vec-name.</td></tr>
+<tr><td class="w">int!</td><td>Store interrupt vector to table (RAM). <span class="stack">( xt vector-no -- )</span></td></tr>
+</table>
+
+<h3>Autostart example</h3>
+<pre>' my-app is turnkey     \ Autostart my-app.
+false is turnkey        \ Disable turnkey application.</pre>
+
+<h2>Interrupt example</h2>
+<pre>ram variable icnt1      \ ...from FF source.
+: irq_forth             \ It's a Forth colon definition
+    [i                  \ ...in the Forth interrupt context.
+        icnt1 @ 1+
+        icnt1 !
+    ]i
+;i
+' irq_forth 0 int!      \ Set the user interrupt vector.
+
+: init                  \ Alternatively, compile a word
+    ['] irq_forth 0 int!    \ ...so that we can install the
+;                           \ ...interrupt service function
+' init is turnkey           \ ...at every warm start.</pre>
+
+<h2>The P register</h2>
+<p>P can be used as variable or pointer, with <code>for..next</code> or otherwise.</p>
+<table>
+<tr><td class="w">!p</td><td>Store addr to P. <span class="stack">( addr -- )</span></td></tr>
+<tr><td class="w">@p</td><td>Fetch P register. <span class="stack">( -- addr )</span></td></tr>
+<tr><td class="w">!p&gt;r</td><td>Push P to R, store new addr in P. <span class="stack">( addr -- )</span> <span class="stack">R:( -- addr )</span></td></tr>
+<tr><td class="w">r&gt;p</td><td>Pop R to P register. <span class="stack">R:( addr -- )</span></td></tr>
+<tr><td class="w">p+</td><td>Increment P by 1.</td></tr>
+<tr><td class="w">p2+</td><td>Add 2 to P.</td></tr>
+<tr><td class="w">p++</td><td>Add n to P. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w">p!</td><td>Store x at P. <span class="stack">( x -- )</span></td></tr>
+<tr><td class="w">pc!</td><td>Store c at P. <span class="stack">( c -- )</span></td></tr>
+<tr><td class="w">p@</td><td>Fetch cell at P. <span class="stack">( -- x )</span></td></tr>
+<tr><td class="w">pc@</td><td>Fetch char at P. <span class="stack">( -- c )</span></td></tr>
+</table>
+<p>In a definition, always use <code>!p&gt;r</code> and <code>r&gt;p</code> for proper nesting.</p>
+
+<h2>Characters</h2>
+<table>
+<tr><td class="w">digit?</td><td>Convert char to digit per base. <span class="stack">( c -- n f )</span></td></tr>
+<tr><td class="w">&gt;digit</td><td>Convert n to ASCII char value. <span class="stack">( n -- c )</span></td></tr>
+<tr><td class="w">&gt;pr</td><td>Char→ASCII; non-graphic→dot. <span class="stack">( c -- c )</span></td></tr>
+<tr><td class="w">char <i>char</i></td><td>Parse char, leave ASCII (e.g. <code>char A</code> → 65).</td></tr>
+<tr><td class="w">[char] <i>char</i></td><td>Compile inline ASCII character.</td></tr>
+</table>
+
+<h2>Strings</h2>
+<p>Some from <code>core.txt</code>.</p>
+<table>
+<tr><td class="w">s&quot; <i>text&quot;</i></td><td>Compile string into flash. <span class="stack">( -- addr u )</span></td></tr>
+<tr><td class="w">.&quot; <i>text&quot;</i></td><td>Compile print-string into flash.</td></tr>
+<tr><td class="w">place</td><td>Place string a1→a2 as counted. <span class="stack">( addr1 u addr2 -- )</span></td></tr>
+<tr><td class="w">n=</td><td>Compare RAM(addr) with Flash(nfa), n&lt;16. <span class="stack">( addr nfa u -- f )</span></td></tr>
+<tr><td class="w">scan</td><td>Scan string until c found, u&lt;255. <span class="stack">( c-addr u c -- caddr1 u1 )</span></td></tr>
+<tr><td class="w">skip</td><td>Skip chars until c not found. <span class="stack">( c-addr u c -- caddr1 u1 )</span></td></tr>
+<tr><td class="w">/string</td><td>Trim string. <span class="stack">( addr u n -- addr+n u-n )</span></td></tr>
+<tr><td class="w">&gt;number</td><td>String→number. <span class="stack">( 0 0 addr1 u1 -- ud.l ud.h addr2 u2 )</span></td></tr>
+<tr><td class="w">number?</td><td>String→number+flag. Prefix # decimal, $ hex, % binary. <span class="stack">( addr1 -- addr2 0 | n 1 | d.l d.h 2 )</span></td></tr>
+<tr><td class="w">sign?</td><td>Get optional minus sign. <span class="stack">( addr1 n1 -- addr2 n2 flag )</span></td></tr>
+<tr><td class="w">type</td><td>Type line, u&lt;256. <span class="stack">( addr u -- )</span></td></tr>
+<tr><td class="w">accept</td><td>Get line from terminal. <span class="stack">( c-addr +n1 -- +n2 )</span></td></tr>
+<tr><td class="w">source</td><td>Input buffer addr and count. <span class="stack">( -- c-addr u )</span></td></tr>
+<tr><td class="w">evaluate</td><td>Interpret string in SRAM. <span class="stack">( addr n -- )</span></td></tr>
+<tr><td class="w">interpret</td><td>Interpret buffer. <span class="stack">( c-addr u -- )</span></td></tr>
+<tr><td class="w">parse</td><td>Parse word in TIB. <span class="stack">( c -- addr length )</span></td></tr>
+<tr><td class="w">word</td><td>Parse word in TIB, write into TIB. <span class="stack">( c -- c-addr )</span></td></tr>
+</table>
+
+<h2>Pictured numeric output</h2>
+<p>Formatted unsigned double-precision integer constructed at end of <code>tib</code>.</p>
+<table>
+<tr><td class="w">&lt;#</td><td>Begin conversion.</td></tr>
+<tr><td class="w">#</td><td>Convert 1 digit. <span class="stack">( ud1 -- ud2 )</span></td></tr>
+<tr><td class="w">#s</td><td>Convert remaining digits (ud2 will be zero). <span class="stack">( ud1 -- ud2 )</span></td></tr>
+<tr><td class="w">hold</td><td>Append char to string. <span class="stack">( c -- )</span></td></tr>
+<tr><td class="w">sign</td><td>Add minus sign if n&lt;0. <span class="stack">( n -- )</span></td></tr>
+<tr><td class="w">#&gt;</td><td>End conversion, leave addr+count. <span class="stack">( ud1 -- c-addr u )</span></td></tr>
+</table>
+<p>For example:</p>
+<pre>-1 34. &lt;# # # # #s rot sign #&gt; type</pre>
+<p>results in <code>-034 ok</code>.</p>
+
+<h2>Interaction with the operator</h2>
+<p>Interaction is via a serial port, typically UART1, at 38400 baud 8N1 with Xon/Xoff. The selected serial port is determined by vectors <code>'emit</code>, <code>'key</code>, <code>'key?</code>.</p>
+
+</div>
+</body>
+</html>
