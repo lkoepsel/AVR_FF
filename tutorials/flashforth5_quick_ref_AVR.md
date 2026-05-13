@@ -120,7 +120,7 @@ Some of these words require `core.txt`, `math.txt` and `qmath.txt`.
 | `d-` | Subtract double numbers. ( d1 d2 -- d1-d2 ) |
 | `m+` | Add single cell to double number. ( d n -- d2 ) |
 | `m*` | Signed 16*16 to 32-bit multiply. ( n n -- d ) |
-| `2*` | Multiply by 2. ( d -- d ) |
+| `d2*` | Multiply by 2. ( d -- d ) |
 | `d2/` | Divide by 2. ( d -- d ) |
 | `um*` | Unsigned 16x16 to 32 bit multiply. ( u1 u2 -- ud ) |
 | `ud*` | Unsigned 32x16 to 32-bit multiply. ( ud u -- ud ) |
@@ -148,6 +148,7 @@ Some of these words require `core.txt`, `math.txt` and `qmath.txt`.
 | `u<` | Leave true if u1 < u2. ( u1 u2 -- f ) |
 | `u>` | Leave true if u1 > u2. ( u1 u2 -- f ) |
 | `d=` | Leave true if d1 d2 are equal. ( d1 d2 -- f ) |
+| `d0=` | Leave true if d is zero. ( d -- f ) |
 | `d0<` | Leave true if d is negative. ( d -- f ) |
 | `d<` | Leave true if d1 < d2. ( d1 d2 -- f ) |
 | `d>` | Leave true if d1 > d2. ( d1 d2 -- f ) |
@@ -369,7 +370,7 @@ Some of these words come from `core.txt`.
 | `irq` | Interrupt vector (SRAM variable). ( -- a-addr ) Always disable user interrupts and clear related interrupt enable bits before zeroing interrupt vector: `di false to irq ei` |
 | `turnkey` | Vector for user start-up word. ( -- a-addr ) EEPROM value mirrored in SRAM. |
 | `prompt` | Deferred execution vector for the info displayed by quit. Default value is `.st`. ( -- a-addr ) |
-| `'emit` | EMIT vector. Default is rx1. ( -- a-addr ) |
+| `'emit` | EMIT vector. Default is tx1. ( -- a-addr ) |
 | `'key` | KEY vector. Default is rx1. ( -- a-addr ) |
 | `'key?` | KEY? vector. Default is rx1?. ( -- a-addr ) |
 | `'source` | Current input source. ( -- a-addr ) |
@@ -604,3 +605,255 @@ results in `-034 ok`
 ## Interaction with the operator
 
 Interaction with the user is via a serial communications port, typically UART1. Settings are 38400 baud, 8N1, using Xon/Xoff handshaking. Which particular serial port is selected is determined by the vectors `'emit`, `'key` and `'key?`.
+
+## Serial I/O
+
+| Word | Description |
+|------|-------------|
+| `emit` | Emit c to the serial port FIFO. ( c -- ) FIFO is 46 chars. Executes pause. |
+| `space` | Emit one space character. ( -- ) |
+| `spaces` | Emit n space characters. ( n -- ) |
+| `cr` | Emit carriage-return, line-feed. ( -- ) |
+| `key` | Get a character from the serial port FIFO. ( -- c ) Executes pause until a character is available. |
+| `key?` | Leave true if character is waiting in the serial port FIFO. ( -- f ) |
+
+## Serial communication ports
+
+The ATmega328P has a single hardware UART (UART0). The `tx1`/`rx1` words are the default `'emit`/`'key`/`'key?` vectors, with `tx0`/`rx0` provided as direct (unbuffered, non-pausing) alternatives.
+
+| Word | Description |
+|------|-------------|
+| `tx0` | Send a character via UART0. ( c -- ) Direct, polled. |
+| `rx0` | Receive a character from UART0. ( -- c ) Direct, polled. |
+| `rx0?` | Leave true if the UART0 receive buffer is not empty. ( -- f ) |
+| `tx1` | Send a character to UART1 (the default UART). ( c -- ) Buffered via an interrupt-driven queue. |
+| `rx1` | Receive a character from UART1. ( -- c ) Buffered by an interrupt-driven queue. |
+| `rx1?` | Leave true if the UART1 receive buffer is not empty. ( -- f ) |
+| `u0-` | Disable Xon/Xoff flow control for the UART0 interface. ( -- ) |
+| `u0+` | Enable Xon/Xoff flow control for the UART0 interface, default. ( -- ) |
+| `u1-` | Disable Xon/Xoff flow control for the UART1 interface. ( -- ) |
+| `u1+` | Enable Xon/Xoff flow control for the UART1 interface, default. ( -- ) |
+
+## Other hardware
+
+| Word | Description |
+|------|-------------|
+| `ei` | Enable interrupts. ( -- ) |
+| `di` | Disable interrupts. ( -- ) |
+| `ms` | Pause for +n milliseconds. ( +n -- ) |
+| `ticks` | System ticks, 0–\$ffff milliseconds. ( -- u ) |
+
+## Multitasking
+
+Load the words for multitasking from `task.txt` (the AVR file is `forth/task.fs`). Tasks are cooperatively scheduled in a round-robin linked list, and switch on `pause` (also called implicitly by `emit` and `key`).
+
+| Word | Description |
+|------|-------------|
+| `task:` *name* | Define a new task in flash memory space. ( tibsize stacksize rstacksize addsize -- ) Use `ram xxx allot` to leave space for the PAD of the previously defined task. The OPERATOR task does not use PAD. |
+| `tinit` | Initialise a user area and link it to the task loop. ( taskloop-addr task-addr -- ) May only be executed from the operator task. |
+| `task` | Leave the address of the task definition table. ( -- addr ) |
+| `run` | Makes a task run by inserting it after operator in the round-robin linked list. ( task-addr -- ) May only be executed from the operator task. |
+| `end` | Remove a task from the task list. ( task-addr -- ) May only be executed from the operator task. |
+| `single` | End all tasks except the operator task. ( -- ) Removes all tasks from the task list. May only be executed from the operator task. |
+| `tasks` | List all running tasks. ( -- ) |
+| `pause` | Switch to the next task in the round-robin task list. ( -- ) Idle in the operator task if allowed by all tasks. |
+| `his` | Access user variables of another task. ( task.addr uvar.addr -- addr ) |
+| `load` | Leave the CPU load on the stack. ( -- n ) Load is the percentage of time that the CPU is busy. Updated every 256 milliseconds. |
+| `load+` | Enable the load LED on AVR8. ( -- ) |
+| `load-` | Disable the load LED on AVR8. ( -- ) |
+| `busy` | CPU idle mode not allowed. ( -- ) |
+| `idle` | CPU idle is allowed. ( -- ) |
+| `operator` | Leave the address of the operator task. ( -- addr ) |
+| `ulink` | Link to next task. ( -- addr ) |
+
+## Assembler words for AVR8
+
+To use the words listed below, load the file `forth/asm.fs`. For the ATmega instructions, *Rd* denotes the destination (and source) register, *Rr* denotes the source register, *Rw* denotes a register-pair code, *K* denotes constant data, *k* is a constant address, *b* is a bit in the register, *X,Y,Z* are indirect address registers, *A* is an I/O location address, and *q* is a 6-bit displacement for direct addressing.
+
+The assembler provides structured flow-control words `if,` / `else,` / `then,`, `begin,` / `again,`, `begin,` *cc* `until,`, and an unconditional invert via `not,` — these are the same across processor families, only the condition codes differ.
+
+### Conditions for structured flow control
+
+| Word | Description |
+|------|-------------|
+| `cs,` | carry set ( -- cc ) |
+| `eq,` | zero ( -- cc ) |
+| `hs,` | half carry set ( -- cc ) |
+| `ie,` | interrupt enabled ( -- cc ) |
+| `lo,` | lower ( -- cc ) |
+| `lt,` | less than ( -- cc ) |
+| `mi,` | negative ( -- cc ) |
+| `ts,` | T flag set ( -- cc ) |
+| `vs,` | no overflow ( -- cc ) |
+| `not,` | Invert condition. ( cc -- not-cc ) |
+
+### Register constants
+
+| Word | Value | Word | Value |
+|------|-------|------|-------|
+| `Z` | ( -- 0 ) | `X` | ( -- 12 ) |
+| `Z+` | ( -- 1 ) | `X+` | ( -- 13 ) |
+| `-Z` | ( -- 2 ) | `-X` | ( -- 14 ) |
+| `Y` | ( -- 8 ) | `XH:XL` | ( -- 01 ) |
+| `Y+` | ( -- 9 ) | `YH:YL` | ( -- 02 ) |
+| `-Y` | ( -- 10 ) | `ZH:ZL` | ( -- 03 ) |
+
+General-purpose registers `R0` through `R31` are also defined as constants leaving their register number on the stack: `R0` ( -- 0 ), `R1` ( -- 1 ), … `R31` ( -- 31 ).
+
+### Branch instructions
+
+| Word | Description |
+|------|-------------|
+| `rjmp,` | Relative jump. ( k -- ) |
+| `ijmp,` | Indirect jump to (Z). ( -- ) |
+| `eijmp,` | Extended indirect jump to (Z). ( -- ) |
+| `jmp,` | Jump. ( k16 k6 -- ) k6 is zero for a 16-bit address. |
+| `rcall,` | Relative call subroutine. ( k -- ) |
+| `icall,` | Indirect call to (Z). ( -- ) |
+| `eicall,` | Extended indirect call to (Z). ( -- ) |
+| `call,` | Call subroutine. ( k16 k6 -- ) k6 is zero for a 16-bit address. |
+| `ret,` | Subroutine return. ( -- ) |
+| `reti,` | Interrupt return. ( -- ) |
+| `cpse,` | Compare, skip if equal. ( Rd Rr -- ) |
+| `cp,` | Compare. ( Rd Rr -- ) |
+| `cpc,` | Compare with carry. ( Rd Rr -- ) |
+| `cpi,` | Compare with immediate. ( Rd K -- ) |
+| `sbrc,` | Skip if bit in register cleared. ( Rr b -- ) |
+| `sbrs,` | Skip if bit in register set. ( Rr b -- ) |
+| `sbic,` | Skip if bit in I/O register cleared. ( A b -- ) |
+| `sbis,` | Skip if bit in I/O register set. ( A b -- ) |
+
+### Arithmetic and logic instructions
+
+| Word | Description |
+|------|-------------|
+| `add,` | Add without carry. ( Rd Rr -- ) |
+| `adc,` | Add with carry. ( Rd Rr -- ) |
+| `adiw,` | Add immediate to word. ( Rw K -- ) Rw = {XH:XL, YH:YL, ZH:ZL} |
+| `sub,` | Subtract without carry. ( Rd Rr -- ) |
+| `subi,` | Subtract immediate. ( Rd K -- ) |
+| `sbc,` | Subtract with carry. ( Rd Rr -- ) |
+| `sbci,` | Subtract immediate with carry. ( Rd K -- ) |
+| `sbiw,` | Subtract immediate from word. ( Rw K -- ) Rw = {XH:XL, YH:YL, ZH:ZL} |
+| `and,` | Logical AND. ( Rd Rr -- ) |
+| `andi,` | Logical AND with immediate. ( Rd K -- ) |
+| `or,` | Logical OR. ( Rd Rr -- ) |
+| `ori,` | Logical OR with immediate. ( Rd K -- ) |
+| `eor,` | Exclusive OR. ( Rd Rr -- ) |
+| `com,` | One's complement. ( Rd -- ) |
+| `neg,` | Two's complement. ( Rd -- ) |
+| `sbr,` | Set bit(s) in register. ( Rd K -- ) |
+| `cbr,` | Clear bit(s) in register. ( Rd K -- ) |
+| `inc,` | Increment. ( Rd -- ) |
+| `dec,` | Decrement. ( Rd -- ) |
+| `tst,` | Test for zero or minus. ( Rd -- ) |
+| `clr,` | Clear register. ( Rd -- ) |
+| `ser,` | Set register. ( Rd -- ) |
+| `mul,` | Multiply unsigned. ( Rd Rr -- ) |
+| `muls,` | Multiply signed. ( Rd Rr -- ) |
+| `mulsu,` | Multiply signed with unsigned. ( Rd Rr -- ) |
+| `fmul,` | Fractional multiply unsigned. ( Rd Rr -- ) |
+| `fmuls,` | Fractional multiply signed. ( Rd Rr -- ) |
+| `fmulsu,` | Fractional multiply signed with unsigned. ( Rd Rr -- ) |
+
+### Data transfer instructions
+
+| Word | Description |
+|------|-------------|
+| `mov,` | Copy register. ( Rd Rr -- ) |
+| `movw,` | Copy register pair. ( Rd Rr -- ) |
+| `ldi,` | Load immediate. ( Rd K -- ) |
+| `lds,` | Load direct from data space. ( Rd k -- ) |
+| `ld,` | Load indirect. ( Rd Rr -- ) Rr = {X, X+, -X, Y, Y+, -Y, Z, Z+, -Z} |
+| `ldd,` | Load indirect with displacement. ( Rd Rr q -- ) Rr = {Y, Z} |
+| `sts,` | Store direct to data space. ( k Rr -- ) |
+| `st,` | Store indirect. ( Rr Rd -- ) Rd = {X, X+, -X, Y, Y+, -Y, Z, Z+, -Z} |
+| `std,` | Store indirect with displacement. ( Rr Rd q -- ) Rd = {Y, Z} |
+| `in,` | In from I/O location. ( Rd A -- ) |
+| `out,` | Out to I/O location. ( Rr A -- ) |
+| `push,` | Push register on stack. ( Rr -- ) |
+| `pop,` | Pop register from stack. ( Rd -- ) |
+
+### Bit and bit-test instructions
+
+| Word | Description |
+|------|-------------|
+| `lsl,` | Logical shift left. ( Rd -- ) |
+| `lsr,` | Logical shift right. ( Rd -- ) |
+| `rol,` | Rotate left through carry. ( Rd -- ) |
+| `ror,` | Rotate right through carry. ( Rd -- ) |
+| `asr,` | Arithmetic shift right. ( Rd -- ) |
+| `swap,` | Swap nibbles. ( Rd -- ) |
+| `bset,` | Flag set. ( s -- ) |
+| `bclr,` | Flag clear. ( s -- ) |
+| `sbi,` | Set bit in I/O register. ( A b -- ) |
+| `cbi,` | Clear bit in I/O register. ( A b -- ) |
+| `bst,` | Bit store from register to T. ( Rr b -- ) |
+| `bld,` | Bit load from T to register. ( Rd b -- ) |
+| `sec,` | Set carry. ( -- ) |
+| `clc,` | Clear carry. ( -- ) |
+| `sen,` | Set negative flag. ( -- ) |
+| `cln,` | Clear negative flag. ( -- ) |
+| `sez,` | Set zero flag. ( -- ) |
+| `clz,` | Clear zero flag. ( -- ) |
+| `sei,` | Global interrupt enable. ( -- ) |
+| `cli,` | Global interrupt disable. ( -- ) |
+| `ses,` | Set signed test flag. ( -- ) |
+| `cls,` | Clear signed test flag. ( -- ) |
+| `sev,` | Set two's complement overflow flag. ( -- ) |
+| `clv,` | Clear two's complement overflow flag. ( -- ) |
+| `set,` | Set T in SREG. ( -- ) |
+| `clt,` | Clear T in SREG. ( -- ) |
+| `seh,` | Set half-carry flag in SREG. ( -- ) |
+| `clh,` | Clear half-carry flag in SREG. ( -- ) |
+
+### MCU control instructions
+
+| Word | Description |
+|------|-------------|
+| `break,` | Break. ( -- ) |
+| `nop,` | No operation. ( -- ) |
+| `sleep,` | Sleep. ( -- ) |
+| `wdr,` | Watchdog reset. ( -- ) |
+
+## Synchronous serial communication
+
+### I²C communications as master
+
+The following words are available as a common set of words for PIC18FXXK22, PIC24FV32KX30X and ATmega328P microcontrollers. Load them from a file with a name like `i2c-base-XXXX.txt` where XXXX is the specific microcontroller (for the AVR see `forth/i2c-base.fs`).
+
+| Word | Description |
+|------|-------------|
+| `i2c.init` | Initialise I²C master mode, 100 kHz clock. ( -- ) |
+| `i2c.close` | Shut down the peripheral module. ( -- ) |
+| `i2c.ping?` | Leave true if the addressed slave device acknowledges. ( 7-bit-addr -- f ) |
+| `i2c.addr.write` | Address slave device for writing. Leave true if the slave acknowledged. ( 7-bit-addr -- f ) |
+| `i2c.c!` | Send byte and leave ack bit. ( c -- ack ) The ack bit will be high if the slave device did not acknowledge. |
+| `i2c.addr.read` | Address slave device for reading. Leave true if slave acknowledged. ( 7-bit-addr -- f ) |
+| `i2c.c@.ack` | Fetch a byte and ack for another. ( -- c ) |
+| `i2c.c@.nack` | Fetch one last byte. ( -- c ) |
+
+Lower-level words:
+
+| Word | Description |
+|------|-------------|
+| `i2c.idle?` | Leave true if the I²C bus is idle. ( -- f ) |
+| `i2c.start` | Send start condition. ( -- ) |
+| `i2c.rsen` | Send restart condition. ( -- ) |
+| `i2c.stop` | Send stop condition. ( -- ) |
+| `i2c.wait` | Poll the I²C hardware until the operation has finished. ( -- ) |
+| `i2c.bus.reset` | Clock through bits so that slave devices are sure to release the bus. ( -- ) |
+
+### SPI communications as master
+
+The following words are available as a common set of words for PIC18FXXK22, PIC24FV32KX30X and ATmega328P microcontrollers. Load them from a file with a name like `spiN-base-XXXX.txt` where XXXX is the specific microcontroller and N identifies the particular SPI module. Because SPI devices are so varied in their specification, you likely have to adjust the register settings in `spi.init` to suit your particular device.
+
+| Word | Description |
+|------|-------------|
+| `spi.init` | Initialise SPI master mode, 1 MHz clock. ( -- ) |
+| `spi.close` | Shut down the peripheral module. ( -- ) |
+| `spi.wait` | Poll the SPI peripheral until the operation has finished. ( -- ) |
+| `spi.cexch` | Send byte c1, leave incoming byte c2 on stack. ( c1 -- c2 ) |
+| `spi.csend` | Send byte c. ( c -- ) |
+| `spi.select` | Select the external device. ( -- ) |
+| `spi.deselect` | Deselect the external device. ( -- ) |
